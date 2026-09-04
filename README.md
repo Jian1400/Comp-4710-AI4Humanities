@@ -1,1 +1,1 @@
-# Comp-4710
+# Comp-4710 AI4Humanities
