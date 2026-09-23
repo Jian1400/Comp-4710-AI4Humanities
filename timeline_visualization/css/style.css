@@ -1,0 +1,2545 @@
+html {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 70% 30%, rgba(183, 144, 79, 0.08), transparent 34%),
+    #f3ede2;
+  color: #2f2924;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.Application {
+  position: relative;
+  min-height: 100vh;
+}
+
+.UserMenu {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  width: 340px;
+  max-height: calc(100vh - 32px);
+  padding: 16px;
+  background: rgba(252, 248, 240, 0.97);
+  border: 1px solid #d5c7b5;
+  border-radius: 12px;
+  box-shadow: 0 12px 34px rgba(54, 43, 35, 0.18);
+  z-index: 10;
+  overflow: hidden;
+}
+
+#Toggleable {
+  max-height: calc(100vh - 78px);
+  overflow-y: auto;
+  padding-right: 3px;
+}
+
+.Legend {
+  border: 0;
+  margin: 14px 0 0;
+  padding: 10px;
+  border-radius: 9px;
+  background: #f1e8db;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.key {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+
+.Search {
+  margin: 14px 0 10px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 6px;
+}
+
+.Search input,
+.LetterSearch{
+  border: 1px solid #d4c6b4;
+  border-radius: 7px;
+  background: #fffdf8;
+  color: #2f2924;
+  padding: 9px 10px;
+  min-width: 0;
+  outline: none;
+}
+
+.Search input:focus,
+.LetterSearch:focus{
+  border-color: #a98245;
+  box-shadow: 0 0 0 3px rgba(169, 130, 69, 0.15);
+}
+
+.Search button,
+.ViewButtons button,
+#CloseButton {
+  border: 0;
+  border-radius: 7px;
+  padding: 8px 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+#clearButton,
+.ViewButtons button {
+  background: #e8dece;
+  color: #5a4334;
+}
+
+#relationshipFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.RelationshipFilter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid #d9ccbb;
+  border-radius: 999px;
+  background: #fffdf8;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.RelationshipFilter input {
+  margin: 0;
+}
+
+.ViewButtons {
+  margin-top: 11px;
+  display: grid;
+  grid-template-columns: 42px 1fr 42px;
+  gap: 6px;
+}
+
+.ToggleMenu .Button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 7px;
+  background: #eee4d5;
+  border-radius: 7px;
+  color: #6d1f2d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.NetworkStatus {
+  position: fixed;
+  top: 18px;
+  right: 20px;
+  z-index: 5;
+  background: rgba(255, 253, 248, 0.94);
+  border: 1px solid #d7cab9;
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #6d1f2d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#relationshipWeb {
+  width: 100%;
+  min-height: 900px;
+}
+
+#relationshipWeb svg {
+  display: block;
+  width: 100%;
+  height: 900px;
+}
+
+.RelationshipLine {
+  stroke: #8f8375;
+  stroke-width: 1.1px;
+  opacity: 0.17;
+  transition: opacity 0.15s, stroke-width 0.15s, stroke 0.15s;
+}
+
+.RelationshipLine.LineHover {
+  opacity: 0.75;
+  stroke: #a98245;
+  stroke-width: 2.5px;
+}
+
+.RelationshipLine.LineSelected {
+  opacity: 0.95;
+  stroke: #6d1f2d;
+  stroke-width: 3px;
+}
+
+.RelationshipLine.FilteredLine {
+  opacity: 0.02;
+}
+
+.PersonNode {
+  transition: opacity 0.18s ease;
+}
+
+.RelationshipNode {
+  cursor: pointer;
+  transition:
+    stroke-width 0.16s ease,
+    filter 0.16s ease,
+    opacity 0.16s ease;
+  filter: drop-shadow(0 3px 4px rgba(47, 41, 36, 0.18));
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 7px;
+  filter: drop-shadow(0 6px 8px rgba(47, 41, 36, 0.28));
+}
+
+.RelationshipNode.NodeSelected {
+  stroke: #6d1f2d !important;
+  stroke-width: 8px !important;
+  filter:
+    drop-shadow(0 0 4px rgba(169, 130, 69, 0.85))
+    drop-shadow(0 7px 10px rgba(47, 41, 36, 0.28));
+}
+
+.RelationshipNode.NodeContext {
+  opacity: 0.52;
+}
+
+.PersonNode.FilteredOut {
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.GeorgeEliotNode .RelationshipNode {
+  filter: drop-shadow(0 7px 10px rgba(109, 31, 45, 0.28));
+}
+
+.NodeHoverName {
+  pointer-events: none;
+  font-size: 13px;
+  font-weight: 700;
+  fill: #2f2924;
+  paint-order: stroke;
+  stroke: rgba(255, 253, 248, 0.97);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+/* Biography */
+#Biography {
+  display: none;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 4px solid #a98245;
+}
+
+.Info {
+  padding: 0;
+}
+
+.NameAndClose {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+#BiographyName {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #6d1f2d;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+#CloseButton {
+  display: none;
+  background: #eadfd0;
+  color: #6d1f2d;
+  font-size: 18px;
+  line-height: 1;
+}
+
+#BirthAndDeath {
+  margin-top: 4px;
+  color: #75685e;
+  font-size: 12px;
+}
+
+#BiographyRelationship {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 3px 7px;
+  border-left: 4px solid #a98245;
+  background: #f2eade;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.Photo {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+#BiographyPhoto {
+  width: 116px;
+  height: 116px;
+  object-fit: cover;
+  border: 3px solid #ded0bd;
+  border-radius: 50%;
+}
+
+#BiographySummary {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f1e8db;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+#BiographyLetters {
+  margin-top: 14px;
+}
+
+.LetterSearch {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.LetterList {
+  margin-top: 8px;
+  display: grid;
+  gap: 7px;
+}
+
+.LetterRow {
+  padding: 8px;
+  border: 1px solid #dfd3c3;
+  border-radius: 7px;
+  background: #fffdf8;
+}
+
+.LetterRow a {
+  color: #6d1f2d;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.LetterRow a:hover {
+  text-decoration: underline;
+}
+
+.LetterEmpty {
+  padding: 9px;
+  border-radius: 7px;
+  background: #f1e8db;
+  color: #75685e;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+@media (max-width: 760px) {
+  .UserMenu {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto !important;
+    margin: 10px;
+    max-height: none;
+  }
+
+  #Toggleable {
+    max-height: none;
+  }
+
+  .NetworkStatus {
+    position: relative;
+    top: auto;
+    right: auto;
+    display: inline-block;
+    margin: 0 10px;
+  }
+
+  #relationshipWeb svg {
+    height: 760px;
+  }
+}
+
+/* Refined network pass */
+.RelationshipLine {
+  opacity: 0.055;
+}
+
+.RelationshipLine.LineHover,
+.RelationshipLine.LineSelected {
+  opacity: 0.9;
+}
+
+.NodeInitials {
+  pointer-events: none;
+  fill: #5f5248;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.PersonNode.FilteredOut .NodeInitials {
+  opacity: 0.08;
+}
+
+.NodeHoverName {
+  font-size: 12px;
+  stroke-width: 4px;
+}
+
+.RelationshipNode {
+  pointer-events: all;
+}
+
+.NodeHoverName {
+  pointer-events: none;
+}
+
+.PersonNode.NodeSelected .NodeHoverName {
+  opacity: 1;
+}
+
+/* Relationship is color-coded only; layout is no longer separated into sectors. */
+
+body {
+  background:
+    radial-gradient(circle at 50% 48%, rgba(169, 130, 69, 0.08), transparent 28%),
+    radial-gradient(circle at 75% 22%, rgba(109, 31, 45, 0.045), transparent 24%),
+    linear-gradient(135deg, #eee6d9 0%, #f8f4ec 48%, #efe7da 100%);
+}
+
+#relationshipWeb {
+  position: relative;
+}
+
+.UserMenu {
+  backdrop-filter: blur(10px);
+  background: rgba(252, 248, 240, 0.94);
+}
+
+.Legend{
+  box-shadow: inset 0 0 0 1px rgba(109, 31, 45, 0.025);
+}
+
+.RelationshipNode {
+  filter: drop-shadow(0 2px 3px rgba(47, 41, 36, 0.16));
+}
+
+.RelationshipNode.NodeHover {
+  filter:
+    drop-shadow(0 0 4px rgba(169, 130, 69, 0.55))
+    drop-shadow(0 5px 7px rgba(47, 41, 36, 0.20));
+}
+
+.RelationshipNode.NodeSelected {
+  filter:
+    drop-shadow(0 0 5px rgba(169, 130, 69, 0.72))
+    drop-shadow(0 7px 10px rgba(47, 41, 36, 0.24));
+}
+
+.NodeHoverName {
+  font-size: 12px;
+  font-weight: 700;
+  fill: #3b312a;
+  stroke: rgba(248, 244, 236, 0.98);
+  stroke-width: 4px;
+}
+
+.NetworkStatus {
+  box-shadow: 0 5px 14px rgba(47, 41, 36, 0.08);
+}
+
+#Biography {
+  background: rgba(255, 253, 248, 0.68);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+#BiographySummary {
+  background: #f4ecdf;
+}
+
+.LetterRow {
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.LetterRow:hover {
+  border-color: #c7ad7e;
+  background: #fffaf2;
+}
+
+body {
+  background:
+    linear-gradient(135deg, #eee5d8 0%, #f7f2e9 52%, #ece2d4 100%);
+}
+
+#relationshipWeb {
+  position: relative;
+  overflow: hidden;
+}
+
+/* This background is SVG content inside zoomLayer, so it pans/zooms with nodes. */
+.NetworkBackgroundLayer {
+  pointer-events: none;
+}
+
+.BackgroundDot {
+  fill: #8d7252;
+  opacity: 0.13;
+}
+
+.DistanceRing circle {
+  fill: none;
+  stroke: #8d7252;
+  stroke-width: 1;
+  stroke-dasharray: 5 8;
+  opacity: 0.13;
+}
+
+.DistanceRing text {
+  fill: #867462;
+  opacity: 0.55;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.CenterHalo {
+  fill: rgba(109, 31, 45, 0.025);
+  stroke: rgba(109, 31, 45, 0.11);
+  stroke-width: 1.2;
+}
+
+.UserMenu {
+  border-color: rgba(151, 126, 98, 0.34);
+  background: rgba(251, 247, 239, 0.95);
+  box-shadow:
+    0 18px 44px rgba(54, 43, 35, 0.15),
+    0 2px 8px rgba(54, 43, 35, 0.08);
+}
+
+.Legend {
+  background: rgba(239, 231, 219, 0.72);
+}
+
+.RelationshipFilter {
+  transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.RelationshipFilter:hover {
+  border-color: #bfa98a;
+  background: #faf5ed;
+}
+
+.RelationshipNode {
+  transition:
+    stroke-width 0.14s ease,
+    filter 0.14s ease,
+    opacity 0.14s ease;
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 6px !important;
+  filter:
+    drop-shadow(0 0 4px rgba(169, 130, 69, 0.58))
+    drop-shadow(0 4px 6px rgba(47, 41, 36, 0.18));
+}
+
+/* Hover no longer changes radius, eliminating stuck enlarged bubbles. */
+.NodeHoverName {
+  font-size: 11.5px;
+  font-weight: 700;
+  fill: #392f29;
+  stroke: rgba(247, 242, 233, 0.98);
+  stroke-width: 4px;
+}
+
+.RelationshipLine {
+  opacity: 0.045;
+}
+
+.RelationshipLine.LineHover {
+  opacity: 0.7;
+}
+
+.RelationshipLine.LineSelected {
+  opacity: 0.9;
+}
+
+#Biography {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid #dfd2c1;
+  border-top-width: 4px;
+  border-radius: 10px;
+  background: rgba(255, 253, 248, 0.82);
+}
+
+#BiographySummary {
+  border: 1px solid rgba(208, 193, 173, 0.65);
+  background: #f5eee3;
+}
+
+.ViewButtons button,
+.Search button {
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.ViewButtons button:hover,
+.Search button:hover {
+  transform: translateY(-1px);
+}
+
+.NodeHitArea {
+  pointer-events: all;
+}
+
+.NodeInitials,
+.NodeHoverName {
+  pointer-events: none;
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 3px 5px rgba(47, 41, 36, 0.18));
+}
+
+/* No scale/radius animation on hover. */
+.RelationshipNode {
+  transform: none !important;
+}
+
+#Biography.BiographyActive {
+  animation: biographyReveal 180ms ease-out;
+}
+
+@keyframes biographyReveal {
+  from {
+    opacity: 0.35;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.SectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.SectionLabel,
+.LegendLabel{
+  color: #6d1f2d;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.SectionAction {
+  border: 0;
+  background: transparent;
+  color: #7f674a;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.SearchWrap {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 36px;
+  gap: 6px;
+}
+
+.SearchWrap input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #d4c6b4;
+  border-radius: 8px;
+  background: #fffdf8;
+  color: #2f2924;
+  padding: 9px 10px;
+  outline: none;
+}
+
+.SearchWrap input:focus {
+  border-color: #a98245;
+  box-shadow: 0 0 0 3px rgba(169, 130, 69, 0.14);
+}
+
+.SearchClear {
+  border: 0;
+  border-radius: 8px;
+  background: #e9dfd0;
+  color: #6d1f2d;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.SearchResults {
+  margin-top: 6px;
+  overflow: hidden;
+  border: 1px solid #d8cbbb;
+  border-radius: 9px;
+  background: #fffdf8;
+  box-shadow: 0 10px 24px rgba(47, 41, 36, 0.12);
+}
+
+.SearchResult {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 0;
+  border-bottom: 1px solid #eee6db;
+  background: transparent;
+  color: #2f2924;
+  text-align: left;
+  cursor: pointer;
+}
+
+.SearchResult:last-child {
+  border-bottom: 0;
+}
+
+.SearchResult:hover {
+  background: #f6efe4;
+}
+
+.SearchResultName {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.SearchResultType {
+  color: #806f61;
+  font-size: 10px;
+}
+
+.SearchEmpty {
+  padding: 10px;
+  color: #7b6d61;
+  font-size: 11px;
+}
+
+.RelationshipPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.RelationshipPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid #d8cbbb;
+  border-radius: 999px;
+  background: #fffdf8;
+  color: #4d4238;
+  font-size: 11px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.RelationshipPill input {
+  display: none;
+}
+
+.RelationshipPill:has(input:not(:checked)) {
+  opacity: 0.38;
+  background: transparent;
+}
+
+.RelationshipPill:hover {
+  border-color: #bda682;
+}
+
+.FocusToggle {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64564c;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.FocusToggle input {
+  accent-color: #6d1f2d;
+}
+
+.LegendItems {
+  margin-top: 7px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+}
+
+.LegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #6d6055;
+  font-size: 10px;
+}
+
+.LegendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+#Biography {
+  margin-top: 8px;
+}
+
+.RelationshipNode.NodeSelected {
+  stroke: #b38d4f !important;
+  stroke-width: 7px !important;
+  filter:
+    drop-shadow(0 0 5px rgba(179, 141, 79, 0.8))
+    drop-shadow(0 6px 10px rgba(47, 41, 36, 0.24));
+}
+
+.PersonNode.FocusDimmed {
+  opacity: 0.16 !important;
+}
+
+.RelationshipLine.FocusDimmedLine {
+  opacity: 0.01 !important;
+}
+
+.DistanceRing circle {
+  stroke-dasharray: 4 9;
+  opacity: 0.095;
+}
+
+.DistanceRing text {
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.45;
+}
+
+.BackgroundDot {
+  opacity: 0.09;
+}
+
+.CenterLabel {
+  fill: #6d1f2d;
+  opacity: 0.58;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.NodeHoverName {
+  paint-order: stroke;
+  stroke: rgba(248, 244, 236, 0.98);
+  stroke-width: 4px;
+}
+
+#relationshipWeb svg {
+  background:
+    radial-gradient(circle at 65% 48%, rgba(169, 130, 69, 0.04), transparent 32%),
+    transparent;
+}
+
+.NetworkBackgroundLayer {
+  pointer-events: none;
+}
+
+.BackgroundDot {
+  fill: #93785d;
+  opacity: 0.08;
+}
+
+.DistanceRing circle {
+  fill: none;
+  stroke: #8d7252;
+  stroke-width: 1;
+  stroke-dasharray: 4 9;
+  opacity: 0.10;
+}
+
+.DistanceRing text {
+  fill: #857465;
+  opacity: 0.52;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+}
+
+.CenterHalo {
+  fill: rgba(109, 31, 45, 0.03);
+  stroke: rgba(109, 31, 45, 0.10);
+  stroke-width: 1.2;
+}
+
+.CenterLabel {
+  fill: #6d1f2d;
+  opacity: 0.60;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.RelationshipLine {
+  pointer-events: none;
+  stroke: #b7aa9b;
+  stroke-width: 1;
+  opacity: 0.03;
+  transition: opacity 0.15s, stroke-width 0.15s, stroke 0.15s;
+}
+
+.RelationshipLine.LineHover {
+  opacity: 0.32;
+  stroke: #b99352;
+  stroke-width: 1.6px;
+}
+
+.RelationshipLine.LineSelected {
+  opacity: 0.82;
+  stroke: #6d1f2d;
+  stroke-width: 2px;
+}
+
+.RelationshipLine.FilteredLine {
+  opacity: 0 !important;
+}
+
+.RelationshipLine.FocusDimmedLine {
+  opacity: 0 !important;
+}
+
+.RelationshipNode {
+  transition:
+    stroke-width 0.14s ease,
+    filter 0.14s ease,
+    opacity 0.14s ease;
+  filter: drop-shadow(0 1px 2px rgba(47, 41, 36, 0.10));
+}
+
+.NodeHitArea {
+  pointer-events: all;
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 4px !important;
+  filter:
+    drop-shadow(0 0 3px rgba(169, 130, 69, 0.40))
+    drop-shadow(0 2px 4px rgba(47, 41, 36, 0.12));
+}
+
+.RelationshipNode.NodeSelected {
+  stroke: #b38d4f !important;
+  stroke-width: 5px !important;
+  filter:
+    drop-shadow(0 0 4px rgba(179, 141, 79, 0.66))
+    drop-shadow(0 3px 6px rgba(47, 41, 36, 0.16));
+}
+
+.GeorgeEliotNode .RelationshipNode {
+  stroke-width: 5px !important;
+  filter:
+    drop-shadow(0 0 5px rgba(109, 31, 45, 0.18))
+    drop-shadow(0 4px 8px rgba(47, 41, 36, 0.14));
+}
+
+.NodeInitials {
+  pointer-events: none;
+  fill: #5b4f45;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.NodeHoverName {
+  pointer-events: none;
+  font-size: 11px;
+  font-weight: 700;
+  fill: #392f29;
+  paint-order: stroke;
+  stroke: rgba(248, 244, 236, 0.98);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.PersonNode.FilteredOut {
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.PersonNode.FocusDimmed {
+  opacity: 0.16 !important;
+}
+
+.SearchResultType {
+  font-style: italic;
+}
+
+#Biography {
+  backdrop-filter: blur(6px);
+}
+
+:root {
+  --paper: #efe5d2;
+  --paper-light: #f8f1e4;
+  --paper-deep: #e2d2b8;
+  --ink: #2c241c;
+  --ink-muted: #6b5b4b;
+  --wine: #6b2430;
+  --wine-dark: #4a1720;
+  --brass: #9a743d;
+  --brass-light: #c3a36c;
+  --rule: #bda889;
+  --sage: #657663;
+}
+
+body {
+  background:
+    radial-gradient(circle at 66% 46%, rgba(154, 116, 61, 0.09), transparent 28%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(82, 63, 42, 0.016) 0,
+      rgba(82, 63, 42, 0.016) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    linear-gradient(135deg, #e8dcc7 0%, #f4ecde 52%, #e7dbc7 100%);
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+
+.UserMenu {
+  border: 1px solid #a99375;
+  border-radius: 3px;
+  background: rgba(247, 239, 225, 0.97);
+  box-shadow:
+    8px 10px 0 rgba(93, 69, 45, 0.06),
+    0 12px 32px rgba(62, 46, 32, 0.13);
+}
+
+.SectionLabel,
+.LegendLabel{
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--brass);
+}
+
+.SearchWrap input,
+.LetterSearch{
+  border: 1px solid #a99578;
+  border-radius: 1px;
+  background: rgba(252, 247, 238, 0.96);
+  color: var(--ink);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 11px;
+}
+
+.SearchWrap input::placeholder,
+.LetterSearch::placeholder {
+  color: #8b7865;
+  font-style: italic;
+}
+
+.SearchClear,
+.ViewButtons button,
+.SectionAction,
+#CloseButton,
+.ToggleMenu .Button {
+  border-radius: 1px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.SearchClear,
+.ViewButtons button,
+.ToggleMenu .Button {
+  border: 1px solid #a99172;
+  background: #eadcc6;
+  color: var(--wine-dark);
+}
+
+.ViewButtons button:hover,
+.SearchClear:hover {
+  background: #dfceb3;
+}
+
+.SectionAction {
+  padding: 2px 0;
+  color: var(--wine);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.RelationshipPill {
+  border: 1px solid #aa9679;
+  border-radius: 1px;
+  background: #f5ecdd;
+  color: var(--ink);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.RelationshipPill:hover {
+  background: #eadbc4;
+  border-color: #8d7557;
+}
+
+.RelationshipPill:has(input:not(:checked)) {
+  opacity: 0.34;
+  background: transparent;
+}
+
+.LegendItem {
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9.5px;
+  color: var(--ink-muted);
+}
+
+.NetworkStatus{
+  border: 1px solid #ad9879;
+  border-radius: 1px;
+  background: rgba(247, 239, 225, 0.94);
+  color: var(--wine-dark);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  box-shadow: 4px 5px 0 rgba(93, 69, 45, 0.05);
+}
+
+#relationshipWeb svg {
+  height: 1000px;
+  background:
+    radial-gradient(circle at 56% 50%, rgba(154, 116, 61, 0.055), transparent 32%),
+    transparent;
+}
+
+.BackgroundDot {
+  fill: #8c6f4e;
+  opacity: 0.16;
+}
+
+.DistanceRing circle {
+  stroke: #9d805b;
+  stroke-width: 1.25;
+  stroke-dasharray: 2 7;
+  opacity: 0.22;
+}
+
+.DistanceRing text {
+  fill: #745f49;
+  opacity: 0.72;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.05em;
+  text-transform: none;
+}
+
+.CenterHalo {
+  fill: rgba(107, 36, 48, 0.045);
+  stroke: rgba(107, 36, 48, 0.20);
+  stroke-width: 1.2;
+}
+
+.CenterLabel {
+  fill: var(--wine-dark);
+  opacity: 0.80;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.RelationshipLine {
+  stroke: #8d765b;
+  stroke-width: 1.15px;
+  opacity: 0.18;
+}
+
+.RelationshipLine.LineHover {
+  opacity: 0.68;
+  stroke: #9a743d;
+  stroke-width: 1.7px;
+}
+
+.RelationshipLine.LineSelected {
+  opacity: 0.95;
+  stroke: #6b2430;
+  stroke-width: 2.1px;
+}
+
+.RelationshipNode {
+  filter: drop-shadow(0 1px 2px rgba(45, 35, 26, 0.10));
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 3px !important;
+  filter:
+    drop-shadow(0 0 3px rgba(154, 116, 61, 0.34))
+    drop-shadow(0 2px 3px rgba(45, 35, 26, 0.10));
+}
+
+.RelationshipNode.NodeSelected {
+  stroke: #9a743d !important;
+  stroke-width: 3.5px !important;
+  filter:
+    drop-shadow(0 0 4px rgba(154, 116, 61, 0.45))
+    drop-shadow(0 3px 5px rgba(45, 35, 26, 0.12));
+}
+
+.GeorgeEliotNode .RelationshipNode {
+  stroke-width: 4px !important;
+}
+
+.NodeInitials {
+  fill: #5a4938;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.NodeHoverName {
+  fill: var(--ink);
+  stroke: rgba(244, 236, 222, 0.98);
+  stroke-width: 4px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.SearchResults {
+  border-radius: 1px;
+  border-color: #a99375;
+  background: #f8f0e2;
+  box-shadow: 5px 6px 0 rgba(93, 69, 45, 0.05);
+}
+
+.SearchResult {
+  font-family: "Libre Baskerville", Georgia, serif;
+  border-bottom-color: rgba(154, 116, 61, 0.20);
+}
+
+.SearchResult:hover {
+  background: #eadbc4;
+}
+
+.SearchResultName {
+  font-size: 10.5px;
+}
+
+.SearchResultType {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 11px;
+  color: #7e674f;
+}
+
+#Biography {
+  border-radius: 1px;
+  border-color: #b9a384;
+  background: rgba(249, 242, 231, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+}
+
+#BiographyName {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 22px;
+  color: var(--wine-dark);
+}
+
+#BiographyRelationship {
+  border-radius: 0;
+  background: #eee0ca;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+#BiographySummary {
+  border-radius: 1px;
+  border-color: #c6b190;
+  background: #f1e4d0;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 11px;
+}
+
+.LetterRow {
+  border-radius: 1px;
+  border-color: #c7b395;
+  background: #faf3e7;
+}
+
+.LetterRow:hover {
+  border-color: #9d805b;
+  background: #f3e7d5;
+}
+
+.LetterRow a {
+  color: var(--wine);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10.5px;
+}
+
+.BackgroundDot {
+  opacity: 0.13;
+}
+
+.DistanceRingOuter {
+  fill: none;
+  stroke: #8f6d43;
+  stroke-width: 1.7px;
+  stroke-dasharray: 2 6;
+  opacity: 0.34;
+}
+
+.DistanceRingInner {
+  fill: none;
+  stroke: #b09169;
+  stroke-width: 0.8px;
+  opacity: 0.20;
+}
+
+.RingLabelPlaque rect {
+  fill: rgba(244, 234, 216, 0.98);
+  stroke: #9b7a50;
+  stroke-width: 0.8px;
+}
+
+.RingLabelPlaque text {
+  fill: #604832;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.04em;
+}
+
+.RelationshipLine {
+  opacity: 0;
+  stroke: #8d765b;
+  stroke-width: 1.1px;
+}
+
+.RelationshipLine.LineHover {
+  opacity: 0.52;
+  stroke: #9a743d;
+  stroke-width: 1.6px;
+}
+
+.RelationshipLine.LineSelected {
+  opacity: 0.90;
+  stroke: #6b2430;
+  stroke-width: 2px;
+}
+
+/* Keep relationship borders legible but restrained. */
+.RelationshipNode {
+  stroke-width: 1.8px !important;
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 2.6px !important;
+}
+
+.RelationshipNode.NodeSelected {
+  stroke-width: 3px !important;
+}
+
+.GeorgeEliotNode .RelationshipNode {
+  stroke-width: 3.4px !important;
+}
+
+html,
+body {
+  min-width: 1120px;
+}
+
+body {
+  overflow: hidden;
+}
+
+.Workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 245px minmax(540px, 1fr) 350px;
+  background: #eee3d0;
+}
+
+.GraphColumn {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(154, 116, 61, 0.075), transparent 33%),
+    linear-gradient(135deg, #e8dbc5, #f3eadb 52%, #e8dcc8);
+}
+
+.GraphFrame,
+#relationshipWeb {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+#relationshipWeb svg {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.SidebarSection {
+  padding: 0 0 21px;
+  margin: 0 0 20px;
+  border-bottom: 1px solid rgba(154, 116, 61, 0.33);
+}
+
+.SidebarSection:last-child {
+  border-bottom: 0;
+}
+
+.SectionLabel,
+.LegendLabel {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #7f5f34;
+  text-transform: uppercase;
+}
+
+.SearchWrap {
+  margin-top: 10px;
+}
+
+.SearchWrap input{
+  padding: 9px 9px;
+  font-size: 10px;
+}
+
+.RelationshipPills {
+  margin-top: 10px;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.RelationshipPill {
+  box-sizing: border-box;
+  width: 100%;
+  justify-content: flex-start;
+  padding: 7px 8px;
+}
+
+.ViewButtons {
+  margin-top: 10px;
+}
+
+.FocusToggle {
+  line-height: 1.4;
+}
+
+.SidebarLegend {
+  margin-bottom: 0;
+}
+
+.LegendItems {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.DetailsHeading {
+  margin-bottom: 18px;
+}
+
+.DetailsRule {
+  margin-top: 8px;
+  height: 3px;
+  border-top: 1px solid #8f704a;
+  border-bottom: 1px solid rgba(143, 112, 74, 0.5);
+}
+
+#Biography {
+  display: none;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.NameAndClose {
+  align-items: flex-start;
+}
+
+#BiographyName {
+  padding-right: 10px;
+  font-size: 25px;
+  line-height: 1.05;
+}
+
+#CloseButton {
+  flex: 0 0 auto;
+  border: 1px solid #a58a66;
+  background: transparent;
+  color: #6b2430;
+}
+
+#BirthAndDeath {
+  margin-top: 5px;
+  color: #756451;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9px;
+}
+
+#BiographyRelationship {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 5px 8px;
+  border: 1px solid #a88d69;
+  background: transparent;
+}
+
+.Photo {
+  margin: 18px 0;
+}
+
+.Photo img {
+  max-width: 132px;
+  max-height: 160px;
+  border: 1px solid #9f8460;
+  padding: 4px;
+  background: #efe2cd;
+  box-shadow: 5px 6px 0 rgba(89, 65, 43, 0.07);
+}
+
+.DetailsSubhead{
+  font-family: "Cormorant Garamond", Georgia, serif;
+  color: #7b5a31;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.DetailsSubhead {
+  margin: 18px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(154, 116, 61, 0.3);
+}
+
+#BiographySummary {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+#BiographyLetters {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(154, 116, 61, 0.34);
+}
+
+.LetterSearch {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+}
+
+.LetterRow {
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid rgba(154, 116, 61, 0.24);
+  background: transparent;
+}
+
+.LetterRow:hover {
+  border-color: rgba(107, 36, 48, 0.45);
+  background: rgba(234, 219, 196, 0.42);
+}
+
+.NetworkStatus,
+.UserMenu,
+.CompactLegend:not(.SidebarLegend){
+  display: none !important;
+}
+
+@media (max-width: 1250px) {
+  .Workspace {
+    grid-template-columns: 220px minmax(500px, 1fr) 315px;
+  }
+
+}
+
+html,
+body {
+  min-width: 900px;
+}
+
+.Workspace {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 245px minmax(500px, 1fr) 350px;
+  transition: grid-template-columns 220ms ease;
+  overflow: hidden;
+}
+
+.Workspace.left-collapsed {
+  grid-template-columns: 34px minmax(500px, 1fr) 350px;
+}
+
+.Workspace.right-collapsed {
+  grid-template-columns: 245px minmax(500px, 1fr) 34px;
+}
+
+.Workspace.left-collapsed.right-collapsed {
+  grid-template-columns: 34px minmax(500px, 1fr) 34px;
+}
+
+.Workspace.left-collapsed .ControlColumn,
+.Workspace.right-collapsed .DetailsColumn {
+  overflow: hidden;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.Workspace.left-collapsed .ControlColumn > *,
+.Workspace.right-collapsed .DetailsColumn > * {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.Workspace.left-collapsed .ColumnToggleLeft {
+  left: 20px;
+}
+
+.Workspace.right-collapsed .ColumnToggleRight {
+  right: 20px;
+}
+
+.GraphColumn {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+.GraphFrame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+#relationshipWeb,
+#relationshipWeb svg {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.GraphStatus {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 8;
+  padding: 4px 8px;
+  border: 1px solid rgba(144, 111, 72, 0.48);
+  background: rgba(244, 234, 216, 0.82);
+  color: #6c5843;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 8.5px;
+  pointer-events: none;
+}
+
+@media (max-width: 1180px) {
+  .Workspace {
+    grid-template-columns: 220px minmax(440px, 1fr) 310px;
+  }
+
+  .Workspace.left-collapsed {
+    grid-template-columns: 34px minmax(440px, 1fr) 310px;
+  }
+
+  .Workspace.right-collapsed {
+    grid-template-columns: 220px minmax(440px, 1fr) 34px;
+  }
+
+  .Workspace.left-collapsed.right-collapsed {
+    grid-template-columns: 34px minmax(440px, 1fr) 34px;
+  }
+
+  .Workspace.left-collapsed .ColumnToggleLeft { left: 20px; }
+  .Workspace.right-collapsed .ColumnToggleRight { right: 20px; }
+}
+
+.LetterReferenceGroup {
+  margin: 10px 0 14px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(154, 116, 61, 0.28);
+}
+
+.LetterReferenceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: #4a1720;
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.LetterReferenceHeader strong {
+  font-size: 14px;
+}
+
+html,
+body {
+  min-width: 0 !important;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.Workspace{
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+}
+
+.Workspace,
+.Workspace.left-collapsed,
+.Workspace.right-collapsed,
+.Workspace.left-collapsed.right-collapsed {
+  display: block !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.GraphColumn {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  z-index: 1;
+}
+
+.GraphFrame,
+#relationshipWeb,
+#relationshipWeb svg {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Drawers float above the graph rather than stealing its width. */
+
+.Workspace.left-collapsed .ControlColumn {
+  transform: translateX(-100%);
+}
+
+.Workspace.right-collapsed .DetailsColumn {
+  transform: translateX(100%);
+}
+
+.Workspace.left-collapsed .ControlColumn > *,
+.Workspace.right-collapsed .DetailsColumn > * {
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.Workspace.left-collapsed .ColumnToggleLeft {
+  left: 8px !important;
+}
+
+.Workspace.right-collapsed .ColumnToggleRight {
+  right: 8px !important;
+}
+
+.GraphStatus {
+  left: 10px;
+  bottom: 9px;
+  opacity: 0.80;
+}
+
+/* Hover labels always sit above nodes and are readable against portraits. */
+.HoverLabelLayer,
+.NodeHoverLabel {
+  pointer-events: none;
+}
+
+.NodeHoverPlaque {
+  fill: rgba(247, 239, 225, 0.98);
+  stroke: rgba(126, 94, 59, 0.72);
+  stroke-width: 0.8px;
+  filter: drop-shadow(1px 2px 1px rgba(46, 35, 25, 0.12));
+}
+
+.NodeHoverName {
+  fill: #3f2f22;
+  stroke: none !important;
+  paint-order: normal !important;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* Compact iframe treatment */
+@media (max-width: 900px), (max-height: 700px) {
+
+  .Workspace.left-collapsed .ColumnToggleLeft {
+    left: 7px !important;
+  }
+
+  .Workspace.right-collapsed .ColumnToggleRight {
+    right: 7px !important;
+  }
+
+  .SidebarSection {
+    padding-top: 11px;
+    padding-bottom: 11px;
+  }
+
+  .SectionLabel,
+  .LegendLabel {
+    font-size: 11px;
+  }
+
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  min-width: 0 !important;
+  min-height: 0;
+  overflow: hidden;
+}
+
+body {
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(82, 63, 42, 0.012) 0,
+      rgba(82, 63, 42, 0.012) 1px,
+      transparent 1px,
+      transparent 4px
+    ),
+    #eee4d2;
+}
+
+.BaselineApp,
+.Workspace {
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+}
+
+.Workspace {
+  display: grid !important;
+  grid-template-columns: 330px minmax(0, 1fr) !important;
+  overflow: hidden;
+}
+
+/* One permanent left column for controls + details */
+.SidebarColumn {
+  position: relative;
+  z-index: 10;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  padding: 16px 16px 24px;
+  border-right: 1px solid #a99070;
+  background:
+    linear-gradient(rgba(247, 239, 225, 0.975), rgba(244, 234, 216, 0.975));
+  box-shadow: 6px 0 18px rgba(58, 43, 29, 0.08);
+  scrollbar-width: thin;
+  scrollbar-color: #b39a79 transparent;
+}
+
+.GraphColumn {
+  position: relative !important;
+  inset: auto !important;
+  min-width: 0 !important;
+  width: auto !important;
+  height: 100% !important;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.GraphFrame,
+#relationshipWeb,
+#relationshipWeb svg {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.GraphFrame {
+  position: relative;
+}
+
+.GraphStatus {
+  left: 10px;
+  bottom: 9px;
+  top: auto;
+  right: auto;
+  opacity: 0.76;
+}
+
+/* Controls stay compact so the person details do not feel buried. */
+.SidebarSection {
+  padding: 11px 0;
+  border-bottom: 1px solid rgba(154, 116, 61, 0.28);
+}
+
+.SidebarLegend {
+  padding-bottom: 12px;
+}
+
+.PersonDetailsSection {
+  margin-top: 4px;
+  padding-top: 13px;
+}
+
+.DetailsHeading {
+  margin-bottom: 10px;
+}
+
+.DetailsRule {
+  margin-top: 5px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(107, 36, 48, 0.52),
+    rgba(154, 116, 61, 0.10)
+  );
+}
+
+.DetailsSubhead {
+  margin-top: 13px;
+  margin-bottom: 5px;
+  color: #6b2430;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.LettersSubhead {
+  margin-top: 17px;
+}
+
+#Biography {
+  margin-top: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#BiographyPhoto {
+  width: 96px;
+  height: 96px;
+  border-width: 2px;
+}
+
+#BiographySummary {
+  margin-top: 0;
+  padding: 9px;
+  border-radius: 1px;
+  font-size: 10.5px;
+  line-height: 1.55;
+}
+
+#BiographyLetters {
+  margin-top: 0;
+}
+
+.LetterSearch {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 0;
+}
+
+.LetterList {
+  margin-top: 7px;
+  display: block;
+}
+
+.LetterReferenceGroup {
+  margin: 0 0 12px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(154, 116, 61, 0.30);
+}
+
+.LetterReferenceHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 5px;
+  color: #4a1720;
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+.LetterReferenceHeader strong {
+  font-size: 14px;
+}
+
+.LetterRow {
+  margin-top: 5px;
+  padding: 7px 8px;
+  border-radius: 1px;
+  background: rgba(250, 243, 231, 0.78);
+}
+
+/* Keep labels above every portrait. */
+.HoverLabelLayer,
+.NodeHoverLabel {
+  pointer-events: none;
+}
+
+.NodeHoverPlaque {
+  fill: rgba(247, 239, 225, 0.99);
+  stroke: rgba(126, 94, 59, 0.76);
+  stroke-width: 0.8px;
+  filter: drop-shadow(1px 2px 1px rgba(46, 35, 25, 0.12));
+}
+
+.NodeHoverName {
+  fill: #3f2f22;
+  stroke: none !important;
+  paint-order: normal !important;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Iframe sizing */
+@media (max-width: 900px) {
+  .Workspace {
+    grid-template-columns: 285px minmax(0, 1fr) !important;
+  }
+
+  .SidebarColumn {
+    padding: 13px 13px 20px;
+  }
+
+  .RelationshipPill {
+    padding-left: 7px;
+    padding-right: 7px;
+  }
+}
+
+@media (max-width: 680px) {
+  .Workspace {
+    grid-template-columns: 245px minmax(0, 1fr) !important;
+  }
+
+  .SidebarColumn {
+    padding: 10px 10px 16px;
+  }
+
+  .SidebarSection {
+    padding: 8px 0;
+  }
+
+  .ViewButtons {
+    grid-template-columns: 34px 1fr 34px;
+  }
+
+  .LegendItems {
+    gap: 5px 8px;
+  }
+
+}
+
+.SidebarView[hidden],
+.PersonDetailsSection[hidden] {
+  display: none !important;
+}
+
+.SidebarExploreView {
+  display: block;
+}
+
+.PersonDetailsSection {
+  margin: 0;
+  padding: 0;
+}
+
+.PersonViewHeading {
+  position: sticky;
+  top: -1px;
+  z-index: 12;
+  margin: -16px -16px 12px;
+  padding: 12px 16px 8px;
+  background: rgba(247, 239, 225, 0.985);
+}
+
+.BackToNetworkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  border: 0;
+  background: transparent;
+  color: #6b2430;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.BackToNetworkButton:hover {
+  color: #43151d;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.PersonViewHeading .DetailsRule {
+  margin-top: 5px;
+}
+
+#Biography .NameAndClose {
+  display: block;
+}
+
+#CloseButton[hidden] {
+  display: none !important;
+}
+
+#BiographyName {
+  padding-right: 0;
+  font-size: 25px;
+  line-height: 1.08;
+}
+
+#BirthAndDeath {
+  margin-top: 3px;
+}
+
+.PersonDetailsSection .Photo {
+  margin-top: 10px;
+}
+
+.PersonDetailsSection #BiographySummary {
+  max-height: none;
+}
+
+.PersonDetailsSection #BiographyLetters {
+  padding-bottom: 20px;
+}
+
+.GenderLegendDot {
+  width: 13px !important;
+  height: 13px !important;
+  border: 3px solid;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+/* Bubble borders are gender-based, including hover/selected state. */
+.RelationshipNode.GenderFemale,
+.RelationshipNode.GenderFemale.NodeHover,
+.RelationshipNode.GenderFemale.NodeSelected {
+  stroke: #c46f95 !important;
+}
+
+.RelationshipNode.GenderMale,
+.RelationshipNode.GenderMale.NodeHover,
+.RelationshipNode.GenderMale.NodeSelected {
+  stroke: #5f87b8 !important;
+}
+
+.RelationshipNode.GenderUnknown,
+.RelationshipNode.GenderUnknown.NodeHover,
+.RelationshipNode.GenderUnknown.NodeSelected {
+  stroke: #8c8378 !important;
+}
+
+.RelationshipNode.NodeSelected {
+  stroke-width: 4.5px !important;
+  filter: drop-shadow(0 0 4px rgba(79, 58, 37, 0.35));
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 3.2px !important;
+}
+
+/* Relationship pills are categories now, not color keys. */
+.RelationshipPill {
+  gap: 8px;
+}
+
+.RelationshipPill .RelationshipSwatch {
+  display: none !important;
+}
+
+/* Related-letter filters */
+.LetterFilterControls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.LetterFilterLabel {
+  display: grid;
+  gap: 4px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  color: #756556;
+}
+
+.LetterFilterSelect {
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(117, 91, 64, 0.35);
+  border-radius: 3px;
+  background: #fbf5e9;
+  color: #3e342b;
+  padding: 6px 8px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 11px;
+}
+
+.LetterFilterSelect:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.LetterSearch {
+  margin-top: 2px;
+}
+
+/* Old print/page identifiers such as (8:304) are intentionally not displayed. */
+
+/* Filtering should be obvious, not just a faint dim. */
+.PersonNode.FilteredOut {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.RelationshipNode {
+  vector-effect: non-scaling-stroke;
+}
+
+.RelationshipNode.GenderFemale {
+  stroke: #c46f95 !important;
+  stroke-width: 3.5px !important;
+}
+
+.RelationshipNode.GenderMale {
+  stroke: #5f87b8 !important;
+  stroke-width: 3.5px !important;
+}
+
+.RelationshipNode.NodeHover {
+  stroke-width: 4.25px !important;
+}
+
+.RelationshipNode.NodeSelected {
+  stroke-width: 5px !important;
+  filter: drop-shadow(0 0 4px rgba(62, 48, 38, 0.35));
+}
+
+/* Completely hide nodes excluded by Family/Friend or Gender filters. */
+.PersonNode.FilteredOut {
+  display: none !important;
+}
+
+.LetterYearGroup {
+  display: grid;
+  gap: 4px;
+}
+
+.LetterYearHeading {
+  margin: 0;
+}
+
+.LetterYearRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+.LetterYearSelect {
+  min-width: 0;
+}
+
+.LetterTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+  margin: 4px 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(117, 91, 64, 0.22);
+}
+
+.LetterTab {
+  min-width: 0;
+  border: 1px solid rgba(117, 91, 64, 0.32);
+  border-radius: 4px;
+  background: rgba(250, 244, 233, 0.78);
+  color: #5b4a3d;
+  padding: 7px 5px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
+}
+
+.LetterTab:hover {
+  border-color: rgba(107, 36, 48, 0.52);
+  background: #f6eddd;
+}
+
+.LetterTab.Active {
+  background: #6b2430;
+  border-color: #6b2430;
+  color: #fffaf0;
+}
+
+.LetterTabSummary {
+  margin: 3px 0 8px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b2430;
+}
+
+
+/* ------------------------------------------------------------------
+   Correspondence timeline visualization
+   ------------------------------------------------------------------ */
+
+.TimelineGraphColumn {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 10px;
+  min-height: 0;
+}
+
+.TimelineGraphColumn .GraphFrame {
+  min-height: 0;
+}
+
+.TimelinePanel {
+  border-top: 1px solid rgba(91, 69, 48, 0.28);
+  background: rgba(247, 239, 225, 0.96);
+  padding: 10px 16px 12px;
+}
+
+.TimelineTopline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+}
+
+.TimelineHint {
+  margin-top: 2px;
+  max-width: 760px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #746557;
+}
+
+.TimelineYear {
+  min-width: 64px;
+  text-align: right;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+  color: #6b2430;
+}
+
+.YearSlider {
+  width: 100%;
+  margin: 9px 0 2px;
+  accent-color: #6b2430;
+  cursor: pointer;
+}
+
+.TimelineRangeLabels {
+  display: flex;
+  justify-content: space-between;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9px;
+  color: #887767;
+}
+
+.TimelineSummary {
+  margin-top: 5px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  color: #51453a;
+}
+
+.TimelineCenterHalo {
+  fill: rgba(107, 36, 48, 0.045);
+  stroke: rgba(107, 36, 48, 0.18);
+}
+
+.RelationshipNode.NoCorrespondence {
+  opacity: 0.28;
+}
+
+.RelationshipNode.NoCorrespondence.NodeHover,
+.RelationshipNode.NoCorrespondence.NodeSelected {
+  opacity: 1;
+}
+
+.NoCorrespondencePerson .NodeInitials {
+  opacity: 0.38;
+}
+
+.RelationshipLine {
+  transition: opacity 120ms ease;
+}
+
+.TimelineLettersYear {
+  margin: 2px 0 8px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #6b2430;
+}
+
+.TimelineLetterControls {
+  margin-top: 2px;
+}
+
+/* The year slider already determines time in this visualization. */
+.LetterYearGroup {
+  display: none !important;
+}
+
+@media (max-width: 680px) {
+  .TimelineTopline {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .TimelineYear {
+    text-align: left;
+  }
+}
+
+
+/* ------------------------------------------------------------------
+   Zero-correspondence boundary
+   ------------------------------------------------------------------ */
+
+.ZeroLetterBoundary {
+  fill: none;
+  stroke: rgba(105, 91, 75, 0.34);
+  stroke-width: 1.4px;
+  stroke-dasharray: 7 7;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.ZeroLetterBoundaryLabel {
+  fill: rgba(92, 77, 63, 0.72);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+
+/* ------------------------------------------------------------------
+   Annual correspondence lines + letter-count labels
+   ------------------------------------------------------------------ */
+
+.CorrespondenceYearLine {
+  display: none;
+  fill: none;
+  stroke: rgba(91, 69, 48, 0.46);
+  stroke-width: 1.35px;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+  pointer-events: none;
+}
+
+.CorrespondenceYearLine.ActiveCorrespondenceLine {
+  display: inline;
+  opacity: 0.72;
+}
+
+.CorrespondenceCountLayer {
+  pointer-events: none;
+}
+
+.CorrespondenceCountLabel {
+  pointer-events: none;
+}
+
+.CorrespondenceCountBox {
+  fill: rgba(248, 241, 229, 0.97);
+  stroke: rgba(91, 69, 48, 0.62);
+  stroke-width: 1px;
+  vector-effect: non-scaling-stroke;
+}
+
+.CorrespondenceCountText {
+  fill: #51453a;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  pointer-events: none;
+}

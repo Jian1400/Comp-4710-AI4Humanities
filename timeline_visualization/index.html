@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>George Eliot Correspondence Timeline</title>
+
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=35" />
+</head>
+
+<body>
+  <div class="Application BaselineApp">
+    <main class="Workspace" id="Workspace">
+
+      <aside class="SidebarColumn" aria-label="Explore, filters, and selected person">
+        <div id="ExplorePanel" class="SidebarView SidebarExploreView">
+        <section class="SidebarSection">
+          <div class="SectionLabel">Explore</div>
+          <div class="SearchWrap">
+            <input id="searchBar" placeholder="Search people…" type="search" autocomplete="off" />
+            <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
+          </div>
+          <div id="searchResults" class="SearchResults" hidden></div>
+        </section>
+
+        <section class="SidebarSection">
+          <div class="SectionHeader">
+            <div class="SectionLabel">Relationship</div>
+            <button id="selectAllRelationships" type="button" class="SectionAction">Show all</button>
+          </div>
+          <div id="relationshipFilters" class="RelationshipPills"></div>
+        </section>
+
+        <section class="SidebarSection">
+          <div class="SectionLabel">Gender</div>
+          <div id="genderFilters" class="RelationshipPills"></div>
+        </section>
+<section class="SidebarSection">
+          <div class="SectionLabel">View</div>
+          <div class="ViewButtons">
+            <button id="zoomOutButton" type="button" aria-label="Zoom out">−</button>
+            <button id="resetViewButton" type="button">Reset view</button>
+            <button id="zoomInButton" type="button" aria-label="Zoom in">+</button>
+          </div>
+        </section>
+
+        <section class="SidebarSection SidebarLegend">
+          <div class="LegendLabel">Gender key</div>
+          <div id="legendItems" class="LegendItems"></div>
+        </section>
+
+        </div>
+
+        <section id="PersonPanel" class="PersonDetailsSection SidebarView" hidden>
+          <div class="DetailsHeading PersonViewHeading">
+            <button id="BackToNetworkButton" type="button" class="BackToNetworkButton">← Back to network</button>
+            <div class="DetailsRule"></div>
+          </div>
+
+          <div id="Biography">
+            <div class="Info">
+              <div class="NameAndClose">
+                <div id="BiographyName"></div>
+                <button id="CloseButton" type="button" aria-label="Clear selected person" hidden>×</button>
+              </div>
+              <div id="BirthAndDeath"></div>
+              <div id="BiographyRelationship"></div>
+              <div class="Photo">
+                <img id="BiographyPhoto" alt="Selected person portrait" />
+              </div>
+            </div>
+
+            <div class="DetailsSubhead">Biography</div>
+            <div id="BiographySummary"></div>
+
+            <div class="DetailsSubhead LettersSubhead">Related letters</div>
+            <div id="BiographyLetters"></div>
+          </div>
+        </section>
+      </aside>
+
+      <section class="GraphColumn TimelineGraphColumn" aria-label="George Eliot correspondence timeline">
+        <div class="GraphFrame">
+          <div id="relationshipWeb"></div>
+          <div class="GraphStatus" id="NetworkStatus">Loading network…</div>
+        </div>
+
+        <section class="TimelinePanel" aria-label="Correspondence year">
+          <div class="TimelineTopline">
+            <div>
+              <div class="SectionLabel">Correspondence timeline</div>
+              <div class="TimelineHint">Closer to George Eliot = more To/From letters exchanged during the selected year. Faded people exchanged none.</div>
+            </div>
+            <div class="TimelineYear" id="TimelineYear">—</div>
+          </div>
+
+          <input
+            id="yearSlider"
+            class="YearSlider"
+            type="range"
+            min="0"
+            max="1"
+            step="1"
+            value="0"
+            aria-label="Selected correspondence year"
+          />
+
+          <div class="TimelineRangeLabels">
+            <span id="TimelineMinYear">—</span>
+            <span id="TimelineMaxYear">—</span>
+          </div>
+
+          <div id="TimelineSummary" class="TimelineSummary">Loading dated correspondence…</div>
+        </section>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="js/relationshipsUtils.js?v=35"></script>
+  <script src="js/relationship.js?v=35"></script>
+</body>
+</html>
