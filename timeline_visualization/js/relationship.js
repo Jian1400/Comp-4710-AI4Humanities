@@ -67,7 +67,11 @@ let timelineMinYear = null;
 let timelineMaxYear = null;
 let globalMaxAnnualLetterCount = 1;
 let currentTimelineYear = null;
+let currentTimelineStartYear = null;
+let currentTimelineEndYear = null;
+let timelineMode = "single";
 window.currentTimelineYear = null;
+window.currentTimelineRange = null;
 
 // -----------------------------------------------------------------------------
 // Letter adapter
@@ -568,44 +572,56 @@ function initializeCorrespondenceTimeline() {
       node.YearCounts[year] = (node.YearCounts[year] || 0) + 1;
       validYears.push(year);
     });
-
-    Object.keys(node.YearCounts).forEach(function(year) {
-      globalMaxAnnualLetterCount = Math.max(
-        globalMaxAnnualLetterCount,
-        node.YearCounts[year]
-      );
-    });
   });
 
-  timelineMinYear = validYears.length
+  let firstYear = validYears.length
     ? Math.min.apply(null, validYears)
     : 1836;
 
+  // Keep the introductory empty year from the latest timeline version.
+  timelineMinYear = firstYear - 1;
   timelineMaxYear = validYears.length
     ? Math.max.apply(null, validYears)
-    : timelineMinYear;
+    : firstYear;
 
   currentTimelineYear = timelineMinYear;
+  currentTimelineStartYear = timelineMinYear;
+  currentTimelineEndYear = Math.min(timelineMinYear + 5, timelineMaxYear);
+  timelineMode = "single";
+
   window.currentTimelineYear = currentTimelineYear;
+  window.currentTimelineRange = null;
 
   let slider = document.getElementById("yearSlider");
-  slider.min = String(timelineMinYear);
-  slider.max = String(timelineMaxYear);
-  slider.value = String(currentTimelineYear);
+  if (slider) {
+    slider.min = String(timelineMinYear);
+    slider.max = String(timelineMaxYear);
+    slider.value = String(currentTimelineYear);
+  }
+
+  ["rangeStartSlider", "rangeEndSlider"].forEach(function(id) {
+    let control = document.getElementById(id);
+    if (!control) return;
+    control.min = String(timelineMinYear);
+    control.max = String(timelineMaxYear);
+  });
+
+  let rangeStart = document.getElementById("rangeStartSlider");
+  let rangeEnd = document.getElementById("rangeEndSlider");
+  if (rangeStart) rangeStart.value = String(currentTimelineStartYear);
+  if (rangeEnd) rangeEnd.value = String(currentTimelineEndYear);
 
   document.getElementById("TimelineMinYear").textContent = timelineMinYear;
   document.getElementById("TimelineMaxYear").textContent = timelineMaxYear;
+  updateSliderValueLabels();
 }
 
 function targetDistanceForCount(count) {
-  // Zero-letter people belong in a separate outer zone.
   if (!count) return 470;
 
-  // Any person with at least one exchanged letter remains clearly inside
-  // the zero-letter boundary.
   let normalized =
     Math.log(1 + count) /
-    Math.log(1 + globalMaxAnnualLetterCount);
+    Math.log(1 + Math.max(1, globalMaxAnnualLetterCount));
 
   return 365 - normalized * 260;
 }
@@ -647,7 +663,8 @@ function rebuildTimelineForces(alpha) {
       d3.forceCollide()
         .radius(function(d) {
           if (d.index === 0) return d.Radius + 18;
-          return nodePassesFilters(d) ? d.Radius + 7 : 0;
+          let extra = window.selectedPersonIndex === d.index ? 15 : 7;
+          return nodePassesFilters(d) ? d.Radius + extra : 0;
         })
         .strength(0.72)
         .iterations(1)
@@ -676,43 +693,132 @@ function startTimelineSimulation() {
   rebuildTimelineForces(1);
 }
 
-function updateTimelineYear(year, animate) {
-  year = Number(year);
+function countLettersForSelection(node) {
+  if (timelineMode === "range") {
+    let total = 0;
+    for (let year = currentTimelineStartYear; year <= currentTimelineEndYear; year++) {
+      total += Number(node.YearCounts[year] || 0);
+    }
+    return total;
+  }
 
-  if (!Number.isFinite(year)) return;
+  return Number(node.YearCounts[currentTimelineYear] || 0);
+}
 
-  currentTimelineYear = Math.max(
-    timelineMinYear,
-    Math.min(timelineMaxYear, year)
-  );
-  window.currentTimelineYear = currentTimelineYear;
+function timelineSelectionLabel() {
+  if (timelineMode === "range") {
+    return currentTimelineStartYear === currentTimelineEndYear
+      ? String(currentTimelineStartYear)
+      : currentTimelineStartYear + "–" + currentTimelineEndYear;
+  }
+  return String(currentTimelineYear);
+}
 
+function shouldShowCorrespondenceLines() {
+  // Correspondence lines are useful in both single-year and range views.
+  return true;
+}
+
+function correspondenceLineWidth(count) {
+  count = Math.max(0, Number(count) || 0);
+  if (!count) return 0;
+
+  // Increase thickness gently with correspondence volume without allowing
+  // high-count relationships to dominate the network.
+  let maxCount = Math.max(1, Number(globalMaxAnnualLetterCount) || 1);
+  let normalized = Math.log(1 + count) / Math.log(1 + maxCount);
+  return 1.1 + normalized * 2.7;
+}
+
+function refreshTimelineSummary() {
+  let visibleNodes = nodes.slice(1).filter(nodePassesFilters);
   let totalLetters = 0;
   let activePeople = 0;
 
-  nodes.slice(1).forEach(function(node) {
-    node.AnnualLetterCount =
-      Number(node.YearCounts[currentTimelineYear] || 0);
-
-    totalLetters += node.AnnualLetterCount;
-
-    if (node.AnnualLetterCount > 0) {
-      activePeople += 1;
-    }
+  visibleNodes.forEach(function(node) {
+    totalLetters += Number(node.AnnualLetterCount || 0);
+    if (node.AnnualLetterCount > 0) activePeople += 1;
   });
 
-  let slider = document.getElementById("yearSlider");
-  if (slider) slider.value = String(currentTimelineYear);
+  let label = timelineSelectionLabel();
+  let yearHeading = document.getElementById("TimelineYear");
+  if (yearHeading) yearHeading.textContent = label;
 
-  document.getElementById("TimelineYear").textContent =
-    String(currentTimelineYear);
+  let summary = document.getElementById("TimelineSummary");
+  if (summary) {
+    summary.textContent =
+      totalLetters +
+      (totalLetters === 1 ? " exchanged letter" : " exchanged letters") +
+      " across " +
+      activePeople +
+      (activePeople === 1 ? " correspondent" : " correspondents") +
+      " · " +
+      visibleNodes.length +
+      (visibleNodes.length === 1 ? " person visible" : " people visible");
+  }
 
-  document.getElementById("TimelineSummary").textContent =
-    totalLetters +
-    (totalLetters === 1 ? " exchanged letter" : " exchanged letters") +
-    " across " +
-    activePeople +
-    (activePeople === 1 ? " correspondent" : " correspondents");
+  let status = document.getElementById("NetworkStatus");
+  if (status) {
+    status.textContent =
+      label +
+      " · " +
+      activePeople +
+      (activePeople === 1 ? " active correspondent" : " active correspondents") +
+      " · " +
+      visibleNodes.length +
+      " visible";
+  }
+}
+
+function positionSliderLabel(slider, label) {
+  if (!slider || !label) return;
+  let min = Number(slider.min);
+  let max = Number(slider.max);
+  let value = Number(slider.value);
+  let percent = max === min ? 0 : ((value - min) / (max - min)) * 100;
+  label.style.left = percent + "%";
+  label.textContent = String(value);
+}
+
+function updateSliderValueLabels() {
+  positionSliderLabel(
+    document.getElementById("yearSlider"),
+    document.getElementById("yearSliderValue")
+  );
+
+  let startSlider = document.getElementById("rangeStartSlider");
+  let endSlider = document.getElementById("rangeEndSlider");
+
+  positionSliderLabel(startSlider, document.getElementById("rangeStartValue"));
+  positionSliderLabel(endSlider, document.getElementById("rangeEndValue"));
+
+  // The range fill represents only the selected interval, not the portion
+  // from the timeline minimum to the second handle.
+  let fill = document.getElementById("rangeTrackFill");
+  if (fill && startSlider && endSlider) {
+    let min = Number(startSlider.min);
+    let max = Number(startSlider.max);
+    let start = Number(startSlider.value);
+    let end = Number(endSlider.value);
+    let span = Math.max(1, max - min);
+    let startPercent = ((start - min) / span) * 100;
+    let endPercent = ((end - min) / span) * 100;
+
+    fill.style.left = startPercent + "%";
+    fill.style.width = Math.max(0, endPercent - startPercent) + "%";
+  }
+}
+
+function refreshTimelineSelection(animate) {
+  globalMaxAnnualLetterCount = 1;
+
+  nodes.slice(1).forEach(function(node) {
+    node.AnnualLetterCount = countLettersForSelection(node);
+    globalMaxAnnualLetterCount = Math.max(
+      globalMaxAnnualLetterCount,
+      node.AnnualLetterCount
+    );
+  });
 
   if (nodeGroupSelection) {
     nodeGroupSelection.classed("NoCorrespondencePerson", function(d) {
@@ -735,6 +841,9 @@ function updateTimelineYear(year, animate) {
       });
   }
 
+  refreshTimelineSummary();
+  updateSliderValueLabels();
+
   if (timelineSimulation) {
     nodes.forEach(function(node) {
       if (node.index === 0) return;
@@ -745,7 +854,6 @@ function updateTimelineYear(year, animate) {
     rebuildTimelineForces(animate === false ? 0.20 : 0.32);
   }
 
-  // If a person's detail panel is open, refresh its letters to the new year.
   if (
     window.selectedPersonIndex !== null &&
     window.selectedPersonIndex !== undefined
@@ -755,21 +863,148 @@ function updateTimelineYear(year, animate) {
       renderRelatedLetterBrowser(selected);
     }
   }
+}
 
-  document.getElementById("NetworkStatus").textContent =
-    currentTimelineYear +
-    " · " +
-    activePeople +
-    " active correspondents";
+function updateTimelineYear(year, animate) {
+  year = Number(year);
+  if (!Number.isFinite(year)) return;
+
+  timelineMode = "single";
+  currentTimelineYear = Math.max(
+    timelineMinYear,
+    Math.min(timelineMaxYear, year)
+  );
+  window.currentTimelineYear = currentTimelineYear;
+  window.currentTimelineRange = null;
+
+  let slider = document.getElementById("yearSlider");
+  if (slider) slider.value = String(currentTimelineYear);
+
+  refreshTimelineSelection(animate);
+  syncTimelineModeControls();
+}
+
+function updateTimelineRange(startYear, endYear, animate, changedHandle) {
+  startYear = Number(startYear);
+  endYear = Number(endYear);
+  if (!Number.isFinite(startYear) || !Number.isFinite(endYear)) return;
+
+  startYear = Math.max(timelineMinYear, Math.min(timelineMaxYear, startYear));
+  endYear = Math.max(timelineMinYear, Math.min(timelineMaxYear, endYear));
+
+  if (startYear > endYear) {
+    if (changedHandle === "start") {
+      endYear = startYear;
+    } else {
+      startYear = endYear;
+    }
+  }
+
+  currentTimelineStartYear = startYear;
+  currentTimelineEndYear = endYear;
+  timelineMode = "range";
+
+  window.currentTimelineRange = {
+    start: currentTimelineStartYear,
+    end: currentTimelineEndYear
+  };
+  window.currentTimelineYear = null;
+
+  let startSlider = document.getElementById("rangeStartSlider");
+  let endSlider = document.getElementById("rangeEndSlider");
+  if (startSlider) startSlider.value = String(currentTimelineStartYear);
+  if (endSlider) endSlider.value = String(currentTimelineEndYear);
+
+  refreshTimelineSelection(animate);
+  syncTimelineModeControls();
+}
+
+function syncTimelineModeControls() {
+  let singleButton = document.getElementById("singleYearModeButton");
+  let rangeButton = document.getElementById("rangeModeButton");
+  let singleControls = document.getElementById("singleYearControls");
+  let rangeControls = document.getElementById("rangeYearControls");
+
+  if (singleButton) singleButton.classList.toggle("Active", timelineMode === "single");
+  if (rangeButton) rangeButton.classList.toggle("Active", timelineMode === "range");
+  if (singleControls) singleControls.hidden = timelineMode !== "single";
+  if (rangeControls) rangeControls.hidden = timelineMode !== "range";
+
+  window.requestAnimationFrame(updateSliderValueLabels);
+}
+
+function setTimelineMode(mode) {
+  if (mode !== "single" && mode !== "range") return;
+
+  if (mode === "single") {
+    let fallbackYear = currentTimelineYear;
+    if (!Number.isFinite(Number(fallbackYear))) {
+      fallbackYear = currentTimelineStartYear;
+    }
+    updateTimelineYear(Number(fallbackYear), true);
+  } else {
+    let start = Number(currentTimelineStartYear);
+    let end = Number(currentTimelineEndYear);
+
+    if (!Number.isFinite(start)) start = Number(currentTimelineYear);
+    if (!Number.isFinite(end)) end = Math.min(start + 5, timelineMaxYear);
+    if (start === end && end < timelineMaxYear) end += 1;
+
+    updateTimelineRange(start, end, true, "end");
+  }
+
+  syncTimelineModeControls();
 }
 
 function bindTimelineControls() {
   let slider = document.getElementById("yearSlider");
-  if (!slider) return;
+  let rangeStart = document.getElementById("rangeStartSlider");
+  let rangeEnd = document.getElementById("rangeEndSlider");
+  let singleButton = document.getElementById("singleYearModeButton");
+  let rangeButton = document.getElementById("rangeModeButton");
 
-  slider.addEventListener("input", function() {
-    updateTimelineYear(Number(slider.value), true);
-  });
+  if (singleButton) {
+    singleButton.addEventListener("click", function() {
+      setTimelineMode("single");
+    });
+  }
+
+  if (rangeButton) {
+    rangeButton.addEventListener("click", function() {
+      setTimelineMode("range");
+    });
+  }
+
+  if (slider) {
+    slider.addEventListener("input", function() {
+      updateTimelineYear(Number(slider.value), true);
+      syncTimelineModeControls();
+    });
+  }
+
+  if (rangeStart && rangeEnd) {
+    rangeStart.addEventListener("input", function() {
+      updateTimelineRange(
+        Number(rangeStart.value),
+        Number(rangeEnd.value),
+        true,
+        "start"
+      );
+      syncTimelineModeControls();
+    });
+
+    rangeEnd.addEventListener("input", function() {
+      updateTimelineRange(
+        Number(rangeStart.value),
+        Number(rangeEnd.value),
+        true,
+        "end"
+      );
+      syncTimelineModeControls();
+    });
+  }
+
+  syncTimelineModeControls();
 }
 
 function getLinkTargetNode(link) {
@@ -964,6 +1199,7 @@ function updateCorrespondenceCountLabels(activeSegments) {
     let node = getLinkTargetNode(link);
 
     if (
+      !shouldShowCorrespondenceLines() ||
       !node ||
       node.AnnualLetterCount <= 0 ||
       !nodePassesFilters(node)
@@ -1062,6 +1298,7 @@ function updateNetworkGeometry() {
     let node = getLinkTargetNode(link);
 
     if (
+      !shouldShowCorrespondenceLines() ||
       !node ||
       node.AnnualLetterCount <= 0 ||
       !nodePassesFilters(node)
@@ -1069,6 +1306,7 @@ function updateNetworkGeometry() {
       path
         .classed("ActiveCorrespondenceLine", false)
         .style("display", "none")
+        .style("stroke-width", null)
         .attr("d", null);
       return;
     }
@@ -1086,6 +1324,7 @@ function updateNetworkGeometry() {
     path
       .classed("ActiveCorrespondenceLine", true)
       .style("display", null)
+      .style("stroke-width", correspondenceLineWidth(node.AnnualLetterCount) + "px")
       .attr(
         "d",
         "M " +
@@ -1105,7 +1344,7 @@ function updateNetworkGeometry() {
 
   networkNodeSelection.attr("cx", 0).attr("cy", 0);
 
-  updateCorrespondenceCountLabels(activeSegments);
+  // Line width now communicates correspondence volume; numeric boxes stay hidden.
 }
 function initialViewTransform() {
   // Network is now centered in the SVG coordinate system. A very small
@@ -1196,7 +1435,7 @@ networkNodeSelection = nodeGroupSelection
         : genderColor(d.GenderNormalized);
     })
     .attr("stroke-width", function(d) {
-      return d.index === 0 ? 4 : 3.5;
+      return d.index === 0 ? 2 : 1.15;
     });
 
   nodeGroupSelection
@@ -1308,6 +1547,7 @@ function showPersonSidebar() {
 function returnToNetworkView() {
   resetNetworkSelection();
   showExploreSidebar();
+  refreshTimelineSummary();
 }
 
 // -----------------------------------------------------------------------------
@@ -1622,11 +1862,21 @@ function buildGenderFilters() {
     let text = document.createElement("span");
     text.textContent = capitalizeWords(value);
 
+    let pillColor = genderColor(value);
+    let pillBackground = value === "female" ? "#f7e5ed" : "#e6edf6";
+    label.style.borderColor = pillColor;
+    label.style.backgroundColor = pillBackground;
+    label.style.boxShadow = "inset 0 0 0 1px " + pillColor;
+
     checkbox.addEventListener("change", function() {
       if (checkbox.checked) {
         enabledGenders.add(value);
+        label.style.opacity = "1";
+        label.style.backgroundColor = pillBackground;
       } else {
         enabledGenders.delete(value);
+        label.style.opacity = "0.55";
+        label.style.backgroundColor = "transparent";
       }
 
       applyFilters();
@@ -1662,9 +1912,7 @@ function applyFilters() {
     return target ? !nodePassesFilters(target) : false;
   });
 
-  let visible = nodes.slice(1).filter(nodePassesFilters).length;
-  document.getElementById("NetworkStatus").textContent =
-    visible + " of " + (nodes.length - 1) + " people visible";
+  refreshTimelineSummary();
 
   applyFocusSelectedState();
 
@@ -1711,13 +1959,16 @@ function bindControls() {
   });
 
 
-  document.getElementById("selectAllRelationships").addEventListener("click", function() {
+  document.getElementById("selectAllFilters").addEventListener("click", function() {
     enabledRelationships = new Set(relationshipValues);
+    enabledGenders = new Set(genderValues);
 
     document
-      .querySelectorAll("#relationshipFilters input[type='checkbox']")
+      .querySelectorAll("#relationshipFilters input[type='checkbox'], #genderFilters input[type='checkbox']")
       .forEach(function(input) {
         input.checked = true;
+        let label = input.closest("label");
+        if (label) label.style.opacity = "1";
       });
 
     applyFilters();
@@ -1729,13 +1980,6 @@ function bindControls() {
 
   document.getElementById("zoomOutButton").addEventListener("click", function() {
     svg.transition().duration(250).call(zoomBehavior.scaleBy, 0.8);
-  });
-
-  document.getElementById("resetViewButton").addEventListener("click", function() {
-    svg
-      .transition()
-      .duration(450)
-      .call(zoomBehavior.transform, initialViewTransform());
   });
 
 

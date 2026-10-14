@@ -11,7 +11,506 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=35" />
+  <link rel="stylesheet" href="css/style.css?v=41" />
+
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .Application,
+    .BaselineApp,
+    .Workspace {
+      width: 100%;
+      height: 100vh;
+      min-height: 0 !important;
+    }
+
+    .Workspace {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: stretch !important;
+      overflow: hidden;
+    }
+
+    /* In the iframe, the graph gets the majority of the available space. */
+    .GraphColumn.TimelineGraphColumn {
+      order: 2;
+      flex: 1 1 auto !important;
+      min-width: 0;
+      width: auto !important;
+      height: 100vh;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .GraphFrame {
+      position: relative;
+      width: 100%;
+      height: 100vh !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+    }
+
+    #relationshipWeb,
+    #relationshipWeb svg {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Compact control/details rail on the left. */
+    .SidebarColumn {
+      order: 1;
+      flex: 0 0 252px !important;
+      width: 252px !important;
+      min-width: 235px !important;
+      max-width: 270px !important;
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+
+    .SidebarSection {
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    .SidebarLegend {
+      padding-bottom: 16px !important;
+    }
+
+    .RelationshipPills {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px !important;
+    }
+
+    .RelationshipPill {
+      min-height: 24px !important;
+      padding: 3px 6px !important;
+      font-size: 10px !important;
+      line-height: 1.15 !important;
+      border-radius: 4px !important;
+    }
+
+    .RelationshipPill input[type="checkbox"] {
+      width: 12px !important;
+      height: 12px !important;
+      margin: 0 4px 0 0 !important;
+    }
+
+    .SectionLabel,
+    .LegendLabel {
+      font-size: 10px !important;
+      letter-spacing: 0.06em !important;
+    }
+
+    .SectionAction {
+      font-size: 9px !important;
+      padding: 2px 4px !important;
+    }
+
+    .TimelineModeSwitch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 7px 0 10px;
+    }
+
+    .TimelineModeButton {
+      appearance: none;
+      border: 1px solid #b9a98f;
+      background: #f7f1e7;
+      color: #4a4038;
+      border-radius: 5px;
+      padding: 6px 7px;
+      font-family: "Libre Baskerville", serif;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .TimelineModeButton.Active {
+      border-color: #6d1f2d;
+      background: #6d1f2d;
+      color: #fffaf2;
+    }
+
+    .TimelineControlGroup[hidden] {
+      display: none !important;
+    }
+
+    .TimelineControlLabel {
+      margin: 2px 0 4px;
+      font-family: "Libre Baskerville", serif;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5b5148;
+    }
+
+    .SliderValueWrap {
+      position: relative;
+      padding: 2px 3px 27px;
+    }
+
+    .YearSlider {
+      width: 100%;
+      margin: 0 !important;
+    }
+
+    .SliderFloatingValue {
+      position: absolute;
+      top: 25px;
+      transform: translateX(-50%);
+      min-width: 38px;
+      padding: 2px 4px;
+      border: 1px solid #b9a98f;
+      border-radius: 4px;
+      background: #f7f1e7;
+      color: #3b332d;
+      font-family: "Libre Baskerville", serif;
+      font-size: 10px;
+      font-weight: 700;
+      text-align: center;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 4;
+    }
+
+    .DualRangeWrap {
+      position: relative;
+      height: 50px;
+      margin: 1px 3px 0;
+    }
+
+    .RangeTrackBase,
+    .RangeTrackFill {
+      position: absolute;
+      top: 10px;
+      height: 4px;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .RangeTrackBase {
+      left: 0;
+      right: 0;
+      background: #d8ccbb;
+    }
+
+    .RangeTrackFill {
+      left: 0;
+      width: 0;
+      background: #6d1f2d;
+      z-index: 1;
+    }
+
+    .DualRangeWrap .YearSlider {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      z-index: 2;
+      pointer-events: none;
+      background: transparent !important;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .DualRangeWrap input[type="range"]::-webkit-slider-runnable-track {
+      height: 4px;
+      background: transparent;
+      border: 0;
+    }
+
+    .DualRangeWrap input[type="range"]::-moz-range-track {
+      height: 4px;
+      background: transparent;
+      border: 0;
+    }
+
+    .DualRangeWrap input[type="range"]::-moz-range-progress {
+      background: transparent;
+    }
+
+    .DualRangeWrap input[type="range"]::-webkit-slider-thumb {
+      pointer-events: auto;
+      cursor: ew-resize;
+      position: relative;
+      z-index: 3;
+    }
+
+    .DualRangeWrap input[type="range"]::-moz-range-thumb {
+      pointer-events: auto;
+      cursor: ew-resize;
+      position: relative;
+      z-index: 3;
+    }
+
+    #rangeStartValue, #rangeEndValue { top: 27px; }
+
+    .TimelineRangeLabels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1px;
+      font-size: 10px !important;
+      opacity: 0.72;
+    }
+
+    .SidebarTimelineSummary {
+      margin-top: 8px;
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .TimelineHintCompact {
+      margin-top: 5px;
+      font-size: 10px;
+      line-height: 1.4;
+      opacity: 0.76;
+    }
+
+    .TimelineSelectionHeading {
+      margin-top: 6px;
+      font-family: "Cormorant Garamond", serif;
+      font-size: 21px;
+      font-weight: 700;
+      line-height: 1;
+      color: #6d1f2d;
+    }
+
+    .ZoomOverlay {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 20;
+      display: flex;
+      overflow: hidden;
+      border: 1px solid rgba(91, 75, 61, 0.35);
+      border-radius: 6px;
+      background: rgba(247, 241, 231, 0.94);
+      box-shadow: 0 2px 8px rgba(54, 43, 34, 0.12);
+    }
+
+    .ZoomOverlay button {
+      width: 34px;
+      height: 32px;
+      border: 0;
+      border-right: 1px solid rgba(91, 75, 61, 0.25);
+      background: transparent;
+      color: #4a4038;
+      font-size: 19px;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .ZoomOverlay button:last-child {
+      border-right: 0;
+    }
+
+    .ZoomOverlay button:hover {
+      background: #efe5d8;
+    }
+
+    .GenderPill {
+      transition: opacity 140ms ease, background-color 140ms ease, border-color 140ms ease;
+    }
+
+    /* The timeline is the primary control in this visualization. */
+    .SidebarTimelineControls {
+      margin: 2px 0 7px !important;
+      padding: 8px 7px 9px !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+    }
+
+    /* Let the timeline controls use the full sidebar width instead of sitting
+       inside a card. */
+    .SidebarTimelineControls .SliderValueWrap,
+    .SidebarTimelineControls .DualRangeWrap,
+    .SidebarTimelineControls .TimelineModeSwitch {
+      width: 100%;
+      max-width: none;
+    }
+
+    .SidebarTimelineControls > .SectionLabel {
+      color: #6d1f2d !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.075em !important;
+    }
+
+    .TimelineSelectionHeading {
+      margin-top: 7px;
+      font-size: 26px;
+    }
+
+    .TimelineModeSwitch {
+      margin: 9px 0 11px;
+    }
+
+    .TimelineModeButton {
+      padding: 7px 6px;
+      font-size: 10px;
+    }
+
+    .SidebarTimelineSummary {
+      margin-top: 9px;
+      font-size: 10px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .TimelineHintCompact {
+      font-size: 9px;
+      line-height: 1.35;
+    }
+
+    /* Keep the secondary filters visually quieter and more compact. */
+    .CompactFilterSection {
+      padding-top: 4px !important;
+      padding-bottom: 4px !important;
+    }
+
+    .CompactFilterSection .SectionLabel {
+      font-size: 9px !important;
+      opacity: 0.76;
+    }
+
+    .CompactFilterSection .RelationshipPill {
+      min-height: 21px !important;
+      padding: 2px 5px !important;
+      font-size: 9px !important;
+      border-radius: 3px !important;
+    }
+
+    .CompactFilterSection .RelationshipPill input[type="checkbox"] {
+      width: 11px !important;
+      height: 11px !important;
+      margin-right: 3px !important;
+    }
+
+    .CompactFilterSection .SectionAction {
+      font-size: 8px !important;
+      padding: 1px 3px !important;
+      opacity: 0.8;
+    }
+
+    /* Single-year mode: neutral track + one year thumb, with no filled progress. */
+    #singleYearControls .SliderValueWrap {
+      padding-bottom: 28px;
+    }
+
+    #yearSlider {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      background: transparent !important;
+      height: 18px;
+    }
+
+    #yearSlider::-webkit-slider-runnable-track {
+      height: 3px;
+      border: 0;
+      border-radius: 999px;
+      background: #d8ccbb !important;
+    }
+
+    #yearSlider::-moz-range-track {
+      height: 3px;
+      border: 0;
+      border-radius: 999px;
+      background: #d8ccbb !important;
+    }
+
+    #yearSlider::-moz-range-progress {
+      height: 3px;
+      background: #d8ccbb !important;
+    }
+
+    #yearSlider::-webkit-slider-thumb {
+      -webkit-appearance: none !important;
+      width: 15px;
+      height: 15px;
+      margin-top: -6px;
+      border: 2px solid #fffaf2;
+      border-radius: 50%;
+      background: #6d1f2d !important;
+      box-shadow: 0 0 0 1px #6d1f2d;
+      cursor: ew-resize;
+    }
+
+    #yearSlider::-moz-range-thumb {
+      width: 15px;
+      height: 15px;
+      border: 2px solid #fffaf2;
+      border-radius: 50%;
+      background: #6d1f2d !important;
+      box-shadow: 0 0 0 1px #6d1f2d;
+      cursor: ew-resize;
+    }
+
+    /* Keep the selected biography compact enough for the iframe rail. */
+    .PersonDetailsSection {
+      padding-bottom: 18px !important;
+    }
+
+    .Photo img {
+      max-height: 190px !important;
+      object-fit: cover;
+    }
+
+    @media (max-width: 900px) {
+      .SidebarColumn {
+        flex-basis: 225px !important;
+        width: 225px !important;
+        min-width: 210px !important;
+      }
+    }
+  
+
+    /* v41: all four filters share one compact row. */
+    .CombinedFilterSection {
+      padding-top: 3px !important;
+      padding-bottom: 3px !important;
+    }
+
+    .CombinedFilterGrid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 3px;
+      width: 100%;
+    }
+
+    .CombinedFilterGrid .RelationshipPills {
+      display: contents !important;
+    }
+
+    .CombinedFilterGrid .RelationshipPill {
+      min-width: 0 !important;
+      min-height: 20px !important;
+      padding: 2px 3px !important;
+      font-size: 8.5px !important;
+      line-height: 1 !important;
+      gap: 2px !important;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+
+    .CombinedFilterGrid .RelationshipPill input[type="checkbox"] {
+      width: 10px !important;
+      height: 10px !important;
+      margin: 0 2px 0 0 !important;
+      flex: 0 0 auto;
+    }
+
+  </style>
 </head>
 
 <body>
@@ -29,30 +528,52 @@
           <div id="searchResults" class="SearchResults" hidden></div>
         </section>
 
-        <section class="SidebarSection">
+        <section class="SidebarSection SidebarTimelineControls" aria-label="Correspondence timeline controls">
+          <div class="SectionLabel">Correspondence timeline</div>
+          <div id="TimelineYear" class="TimelineSelectionHeading">—</div>
+
+          <div class="TimelineModeSwitch" role="group" aria-label="Timeline selection mode">
+            <button id="singleYearModeButton" class="TimelineModeButton Active" type="button">Single year</button>
+            <button id="rangeModeButton" class="TimelineModeButton" type="button">Year range</button>
+          </div>
+
+          <div id="singleYearControls" class="TimelineControlGroup">
+            <div class="TimelineControlLabel">Year</div>
+            <div class="SliderValueWrap">
+              <input id="yearSlider" class="YearSlider" type="range" min="0" max="1" step="1" value="0" aria-label="Selected correspondence year" />
+              <div id="yearSliderValue" class="SliderFloatingValue">—</div>
+            </div>
+          </div>
+
+          <div id="rangeYearControls" class="TimelineControlGroup" hidden>
+            <div class="TimelineControlLabel">Range</div>
+            <div class="DualRangeWrap" aria-label="Selected correspondence year range">
+              <div class="RangeTrackBase"></div>
+              <div id="rangeTrackFill" class="RangeTrackFill"></div>
+              <input id="rangeStartSlider" class="YearSlider" type="range" min="0" max="1" step="1" value="0" aria-label="Range start year" />
+              <input id="rangeEndSlider" class="YearSlider" type="range" min="0" max="1" step="1" value="1" aria-label="Range end year" />
+              <div id="rangeStartValue" class="SliderFloatingValue">—</div>
+              <div id="rangeEndValue" class="SliderFloatingValue">—</div>
+            </div>
+          </div>
+
+          <div class="TimelineRangeLabels">
+            <span id="TimelineMinYear">—</span>
+            <span id="TimelineMaxYear">—</span>
+          </div>
+          <div id="TimelineSummary" class="TimelineSummary SidebarTimelineSummary">Loading dated correspondence…</div>
+          <div class="TimelineHintCompact">Closer to George Eliot = more To/From letters in the selected year or range. Faded people exchanged none.</div>
+        </section>
+
+        <section class="SidebarSection CompactFilterSection CombinedFilterSection">
           <div class="SectionHeader">
-            <div class="SectionLabel">Relationship</div>
-            <button id="selectAllRelationships" type="button" class="SectionAction">Show all</button>
+            <div class="SectionLabel">Filters</div>
+            <button id="selectAllFilters" type="button" class="SectionAction">Show all</button>
           </div>
-          <div id="relationshipFilters" class="RelationshipPills"></div>
-        </section>
-
-        <section class="SidebarSection">
-          <div class="SectionLabel">Gender</div>
-          <div id="genderFilters" class="RelationshipPills"></div>
-        </section>
-<section class="SidebarSection">
-          <div class="SectionLabel">View</div>
-          <div class="ViewButtons">
-            <button id="zoomOutButton" type="button" aria-label="Zoom out">−</button>
-            <button id="resetViewButton" type="button">Reset view</button>
-            <button id="zoomInButton" type="button" aria-label="Zoom in">+</button>
+          <div class="CombinedFilterGrid">
+            <div id="relationshipFilters" class="RelationshipPills"></div>
+            <div id="genderFilters" class="RelationshipPills"></div>
           </div>
-        </section>
-
-        <section class="SidebarSection SidebarLegend">
-          <div class="LegendLabel">Gender key</div>
-          <div id="legendItems" class="LegendItems"></div>
         </section>
 
         </div>
@@ -88,42 +609,18 @@
       <section class="GraphColumn TimelineGraphColumn" aria-label="George Eliot correspondence timeline">
         <div class="GraphFrame">
           <div id="relationshipWeb"></div>
+          <div class="ZoomOverlay" aria-label="Graph zoom controls">
+            <button id="zoomOutButton" type="button" aria-label="Zoom out" title="Zoom out">−</button>
+            <button id="zoomInButton" type="button" aria-label="Zoom in" title="Zoom in">+</button>
+          </div>
           <div class="GraphStatus" id="NetworkStatus">Loading network…</div>
         </div>
-
-        <section class="TimelinePanel" aria-label="Correspondence year">
-          <div class="TimelineTopline">
-            <div>
-              <div class="SectionLabel">Correspondence timeline</div>
-              <div class="TimelineHint">Closer to George Eliot = more To/From letters exchanged during the selected year. Faded people exchanged none.</div>
-            </div>
-            <div class="TimelineYear" id="TimelineYear">—</div>
-          </div>
-
-          <input
-            id="yearSlider"
-            class="YearSlider"
-            type="range"
-            min="0"
-            max="1"
-            step="1"
-            value="0"
-            aria-label="Selected correspondence year"
-          />
-
-          <div class="TimelineRangeLabels">
-            <span id="TimelineMinYear">—</span>
-            <span id="TimelineMaxYear">—</span>
-          </div>
-
-          <div id="TimelineSummary" class="TimelineSummary">Loading dated correspondence…</div>
-        </section>
       </section>
 
     </main>
   </div>
 
-  <script src="js/relationshipsUtils.js?v=35"></script>
-  <script src="js/relationship.js?v=35"></script>
+  <script src="js/relationshipsUtils.js?v=41"></script>
+  <script src="js/relationship.js?v=41"></script>
 </body>
 </html>

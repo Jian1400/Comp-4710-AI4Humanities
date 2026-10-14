@@ -74,6 +74,68 @@ function relationshipSecondaryColor(value) {
 // -----------------------
 // Hover + selection
 // -----------------------
+function visualRadiusForState(data, state) {
+  let base = Number(data && data.Radius ? data.Radius : 18);
+  if (state === "selected") return Math.max(base + 12, 30);
+  if (state === "hover") return Math.max(base + 6, 24);
+  return base;
+}
+
+function setNodeVisualState(data, state) {
+  if (!data || data.index === 0) return;
+
+  let group = d3.select("#" + data.nodeId);
+  if (group.empty()) return;
+
+  let radius = visualRadiusForState(data, state);
+
+  group
+    .select(".RelationshipNode")
+    .interrupt()
+    .transition()
+    .duration(160)
+    .attr("r", radius);
+
+  group
+    .select(".NodeHitArea")
+    .attr("r", radius + 8);
+
+  group
+    .select(".NodeInitials")
+    .interrupt()
+    .transition()
+    .duration(160)
+    .style("font-size", state === "selected" ? "16px" : state === "hover" ? "14px" : null)
+    .style("font-weight", state === "base" ? null : "700");
+}
+
+function clearSelectedNodeLabel() {
+  d3.selectAll(".NodeSelectedLabel").remove();
+}
+
+function showSelectedNodeLabel(data) {
+  clearSelectedNodeLabel();
+  if (!data || data.index === 0) return;
+
+  let group = d3.select("#" + data.nodeId);
+  if (group.empty()) return;
+
+  group
+    .append("text")
+    .attr("class", "NodeSelectedLabel")
+    .attr("text-anchor", "middle")
+    .attr("y", visualRadiusForState(data, "selected") + 24)
+    .style("font-family", "'Libre Baskerville', serif")
+    .style("font-size", "18px")
+    .style("font-weight", "700")
+    .style("paint-order", "stroke")
+    .style("stroke", "#f7f1e7")
+    .style("stroke-width", "5px")
+    .style("stroke-linejoin", "round")
+    .style("fill", "#2f2924")
+    .style("pointer-events", "none")
+    .text(data.FullName || "");
+}
 function selectNode(node, data) {
   data = data || node.data()[0];
   if (!data || data.index === 0) return;
@@ -82,6 +144,8 @@ function selectNode(node, data) {
 
   node.classed("NodeHover", true);
 
+  let isSelected = window.selectedPersonIndex === data.index;
+  setNodeVisualState(data, isSelected ? "selected" : "hover");
   showHoverName(node, data);
   highlightPersonLink(data.index, true);
 }
@@ -91,6 +155,9 @@ function deselectNode(node, data) {
   if (!data) return;
 
   node.classed("NodeHover", false);
+
+  let isSelected = window.selectedPersonIndex === data.index;
+  setNodeVisualState(data, isSelected ? "selected" : "base");
 
   d3.selectAll(".NodeHoverLabel").remove();
 
@@ -112,7 +179,11 @@ function showHoverName(node, data) {
     .attr("class", "NodeHoverLabel")
     .attr(
       "transform",
-      "translate(" + data.x + "," + (data.y + Number(data.Radius) + 24) + ")"
+      "translate(" + data.x + "," +
+        (data.y + visualRadiusForState(
+          data,
+          window.selectedPersonIndex === data.index ? "selected" : "hover"
+        ) + 28) + ")"
     );
 
   let text = group
@@ -122,6 +193,8 @@ function showHoverName(node, data) {
     .attr("y", 0)
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "middle")
+    .style("font-size", "18px")
+    .style("font-weight", "700")
     .text(function() {
       let count = Number(data.AnnualLetterCount || 0);
       return data.FullName +
@@ -146,6 +219,14 @@ function showHoverName(node, data) {
 
 function setSelectedPerson(data) {
   window.selectedPersonIndex = data ? data.index : null;
+
+  d3.selectAll(".PersonNode").each(function(d) {
+    if (!d || d.index === 0) return;
+    setNodeVisualState(d, data && d.index === data.index ? "selected" : "base");
+  });
+
+  clearSelectedNodeLabel();
+  if (data) showSelectedNodeLabel(data);
 
   d3.selectAll(".RelationshipNode")
     .classed("NodeSelected", function(d) {
@@ -204,6 +285,11 @@ function clearDisplay(clearSelection = true) {
 
   if (clearSelection) {
     window.selectedPersonIndex = null;
+    clearSelectedNodeLabel();
+    d3.selectAll(".PersonNode").each(function(d) {
+      if (!d || d.index === 0) return;
+      setNodeVisualState(d, "base");
+    });
     d3.selectAll(".RelationshipNode")
       .classed("NodeSelected", false)
       .classed("NodeContext", false);
@@ -229,6 +315,13 @@ function renderRelatedLetterBrowser(data) {
   container.innerHTML = "";
 
   let selectedYear = Number(window.currentTimelineYear);
+  let selectedRange = window.currentTimelineRange;
+  let rangeStart = selectedRange ? Number(selectedRange.start) : null;
+  let rangeEnd = selectedRange ? Number(selectedRange.end) : null;
+  let hasRange =
+    selectedRange &&
+    Number.isFinite(rangeStart) &&
+    Number.isFinite(rangeEnd);
 
   let allLetters =
     typeof getLettersForNode === "function"
@@ -293,26 +386,29 @@ function renderRelatedLetterBrowser(data) {
     letter.correspondent = extractCorrespondent(letter);
   });
 
-  // The timeline controls the year. Unknown-date letters are not assigned
-  // to a year and therefore do not appear in this year-specific panel.
+  // The timeline controls either one year or an inclusive year range.
+  // Unknown-date letters remain excluded because they cannot be placed reliably.
   let letters = allLetters.filter(function(letter) {
+    if (!Number.isFinite(letter.year)) return false;
+    if (hasRange) return letter.year >= rangeStart && letter.year <= rangeEnd;
     return Number.isFinite(selectedYear) && letter.year === selectedYear;
   });
 
+  let selectionText = hasRange
+    ? (rangeStart === rangeEnd ? String(rangeStart) : rangeStart + "–" + rangeEnd)
+    : (Number.isFinite(selectedYear) ? String(selectedYear) : "");
+
   let yearNote = document.createElement("div");
   yearNote.className = "TimelineLettersYear";
-  yearNote.textContent = Number.isFinite(selectedYear)
-    ? "Letters in " + selectedYear
-    : "Letters";
+  yearNote.textContent = selectionText ? "Letters in " + selectionText : "Letters";
   container.appendChild(yearNote);
 
   if (!letters.length) {
     let empty = document.createElement("div");
     empty.className = "LetterEmpty";
-    empty.textContent =
-      "No dated related letters are listed for this person in " +
-      selectedYear +
-      ".";
+    empty.textContent = selectionText
+      ? "No dated related letters are listed for this person in " + selectionText + "."
+      : "No dated related letters are listed for this person.";
     container.appendChild(empty);
     return;
   }
