@@ -68,23 +68,6 @@ http://localhost:8000/
 
 and navigate into either visualization folder.
 
-## Repository Structure
-
-```text
-Comp-4710-AI4Humanities/
-├── Datasets/
-│   └── UpdatedGeorgeEliotGallery.csv
-├── network_visualization/
-│   ├── index.html
-│   ├── css/
-│   ├── js/
-│   └── images/
-└── timeline_visualization/
-    ├── index.html
-    ├── css/
-    ├── js/
-    └── images/
-```
 
 Both visualizations use data from:
 
