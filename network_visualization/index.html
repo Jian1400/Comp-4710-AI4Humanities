@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=30" />
+  <link rel="stylesheet" href="css/style.css?v=research" />
 </head>
 
 <body>
@@ -20,45 +20,70 @@
 
       <aside class="SidebarColumn" aria-label="Explore, filters, and selected person">
         <div id="ExplorePanel" class="SidebarView SidebarExploreView">
-        <section class="SidebarSection">
-          <div class="SectionLabel">Explore</div>
-          <div class="SearchWrap">
-            <input id="searchBar" placeholder="Search people…" type="search" autocomplete="off" />
-            <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
+          <div class="NetworkModeTabs" role="tablist" aria-label="Network tools">
+            <button id="ExploreModeButton" class="NetworkModeTab Active" type="button">Explore</button>
+            <button id="ComparisonModeButton" class="NetworkModeTab" type="button">Comparison</button>
           </div>
-          <div id="searchResults" class="SearchResults" hidden></div>
-        </section>
 
-        <section class="SidebarSection">
-          <div class="SectionHeader">
-            <div class="SectionLabel">Relationship</div>
-            <button id="selectAllRelationships" type="button" class="SectionAction">Show all</button>
+          <div id="ExploreControls">
+            <section class="SidebarSection">
+              <div class="SectionLabel">Explore</div>
+              <div class="SearchWrap">
+                <input id="searchBar" placeholder="Search people or alternate names…" type="search" autocomplete="off" />
+                <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
+              </div>
+              <div id="searchResults" class="SearchResults" hidden></div>
+            </section>
+
+            <section class="SidebarSection CompactFilterSection">
+              <div class="SectionHeader">
+                <div class="SectionLabel">Filters</div>
+                <button id="resetFiltersButton" type="button" class="SectionAction">Reset</button>
+              </div>
+              <div id="combinedFilters" class="RelationshipPills FilterPills"></div>
+
+              <label class="ResearchFilterLabel" for="letterRangeFilter">Related letters</label>
+              <select id="letterRangeFilter" class="ResearchFilterSelect" aria-label="Related letter count range"></select>
+
+              <label class="ResearchFilterLabel" for="correspondenceBalanceFilter">Correspondence balance</label>
+              <select id="correspondenceBalanceFilter" class="ResearchFilterSelect" aria-label="Correspondence balance">
+                <option value="all">All correspondence patterns</option>
+                <option value="to">To-dominant</option>
+                <option value="balanced">Balanced</option>
+                <option value="from">From-dominant</option>
+              </select>
+              <div class="ResearchFilterHint">Balance uses only To/From letters. “Balanced” means neither direction is more than 60% of the exchange.</div>
+            </section>
+
+            <section class="SidebarSection NetworkGuideSection">
+              <div class="SectionLabel">About this view</div>
+              <p class="NetworkGuideText">People are positioned around George Eliot using the Archive’s predefined closeness values. Filters let you compare those curated relationships with gender, related-letter volume, and the balance of To/From correspondence. Select a portrait to view its biography and linked letters.</p>
+            </section>
           </div>
-          <div id="relationshipFilters" class="RelationshipPills"></div>
-        </section>
 
-        <section class="SidebarSection">
-          <div class="SectionLabel">Gender</div>
-          <div id="genderFilters" class="RelationshipPills"></div>
-        </section>
-<section class="SidebarSection">
-          <div class="SectionLabel">View</div>
-          <div class="ViewButtons">
-            <button id="zoomOutButton" type="button" aria-label="Zoom out">−</button>
-            <button id="resetViewButton" type="button">Reset view</button>
-            <button id="zoomInButton" type="button" aria-label="Zoom in">+</button>
+          <div id="ComparisonControls" hidden>
+            <section class="SidebarSection ComparisonIntroSection">
+              <div class="SectionLabel">Compare people</div>
+              <p class="NetworkGuideText">Tap two person bubbles in the network to compare the Archive’s closeness value with the amount and direction of their linked correspondence.</p>
+
+              <div class="ComparisonSlots" aria-live="polite">
+                <div class="ComparisonSlotRow">
+                  <span class="ComparisonSlotTag">A</span>
+                  <span id="ComparisonASlot" class="ComparisonSlotValue">Tap a bubble for Person A</span>
+                </div>
+                <div class="ComparisonSlotRow">
+                  <span class="ComparisonSlotTag">B</span>
+                  <span id="ComparisonBSlot" class="ComparisonSlotValue">Tap a second bubble for Person B</span>
+                </div>
+              </div>
+              <button id="ClearComparisonButton" class="ComparisonClearButton" type="button">Clear comparison</button>
+            </section>
+
+            <section class="SidebarSection ComparisonResultSection">
+              <div id="ComparisonMessage" class="ComparisonMessage">Select two people to compare.</div>
+              <div id="ComparisonResults" class="ComparisonResults" hidden></div>
+            </section>
           </div>
-          <label class="FocusToggle">
-            <input id="focusSelectedToggle" type="checkbox" />
-            <span>Focus selected person</span>
-          </label>
-        </section>
-
-        <section class="SidebarSection SidebarLegend">
-          <div class="LegendLabel">Gender key</div>
-          <div id="legendItems" class="LegendItems"></div>
-        </section>
-
         </div>
 
         <section id="PersonPanel" class="PersonDetailsSection SidebarView" hidden>
@@ -99,7 +124,7 @@
     </main>
   </div>
 
-  <script src="js/relationshipsUtils.js?v=30"></script>
-  <script src="js/relationship.js?v=30"></script>
+  <script src="js/relationshipsUtils.js?v=research"></script>
+  <script src="js/relationship.js?v=research"></script>
 </body>
 </html>

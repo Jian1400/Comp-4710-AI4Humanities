@@ -2315,7 +2315,7 @@ body {
 
 .LetterTabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
   margin: 4px 0 12px;
   padding-bottom: 8px;
@@ -2356,4 +2356,297 @@ body {
   font-size: 13px;
   font-weight: 700;
   color: #6b2430;
+}
+
+
+/* Current research controls */
+.NetworkModeTabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin: 0 0 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(154, 116, 61, 0.28);
+}
+
+.NetworkModeTab {
+  border: 1px solid rgba(117, 91, 64, 0.34);
+  border-radius: 3px;
+  background: rgba(250, 244, 233, 0.65);
+  color: #5b4a3d;
+  padding: 7px 5px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.NetworkModeTab.Active {
+  border-color: #6b2430;
+  background: #6b2430;
+  color: #fffaf0;
+}
+
+.FilterPills {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px !important;
+  margin: 9px 0 13px !important;
+}
+
+.FilterPills .RelationshipPill {
+  width: auto !important;
+  min-width: 0;
+  flex-direction: row;
+  justify-content: flex-start;
+  padding: 7px 8px;
+  border-radius: 4px;
+}
+
+.FilterPills .RelationshipPill.FilterFamily { background: rgba(138, 82, 96, 0.11); border-color: rgba(138, 82, 96, 0.42); }
+.FilterPills .RelationshipPill.FilterFriend { background: rgba(95, 127, 105, 0.12); border-color: rgba(95, 127, 105, 0.42); }
+.FilterPills .RelationshipPill.FilterFemale { background: rgba(196, 111, 149, 0.11); border-color: rgba(196, 111, 149, 0.42); }
+.FilterPills .RelationshipPill.FilterMale { background: rgba(95, 135, 184, 0.11); border-color: rgba(95, 135, 184, 0.42); }
+
+.FilterPills .RelationshipPill:has(input:not(:checked)) {
+  opacity: 0.48;
+  background: transparent;
+}
+
+.FilterCheck {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid rgba(75, 58, 43, 0.55);
+  border-radius: 2px;
+  background: rgba(255, 252, 245, 0.68);
+  color: #4a1720;
+  font-family: Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.RelationshipPill input:checked + .FilterCheck::after { content: "✓"; }
+.RelationshipPill input:not(:checked) + .FilterCheck::after { content: ""; }
+
+.ResearchFilterLabel,
+.CompareSelectLabel {
+  display: block;
+  margin: 10px 0 4px;
+  color: #6f5e4e;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9.5px;
+  font-weight: 700;
+}
+
+.ResearchFilterSelect {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 34px;
+  border: 1px solid rgba(117, 91, 64, 0.38);
+  border-radius: 3px;
+  background: #fbf5e9;
+  color: #3e342b;
+  padding: 6px 8px;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 10px;
+}
+
+.ResearchFilterHint {
+  margin-top: 6px;
+  color: #806f61;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 8.5px;
+  line-height: 1.45;
+}
+
+.NetworkGuideText {
+  margin: 8px 0 0;
+  color: #665646;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9.5px;
+  line-height: 1.62;
+}
+
+.ComparisonIntroSection { padding-top: 8px; }
+.CompareSelect { margin-bottom: 5px; }
+
+.ComparisonMessage {
+  padding: 10px 0;
+  color: #7a6858;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9.5px;
+  line-height: 1.5;
+}
+
+.ComparisonResults {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ComparisonCard {
+  min-width: 0;
+  padding: 9px 8px;
+  border: 1px solid rgba(154, 116, 61, 0.35);
+  border-radius: 3px;
+  background: rgba(250, 243, 231, 0.72);
+}
+
+.ComparisonCardTag {
+  margin-bottom: 4px;
+  color: #9a743d;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ComparisonCard h3 {
+  margin: 0 0 8px;
+  color: #4a1720;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 15px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.ComparisonMetric {
+  display: grid;
+  gap: 2px;
+  padding: 5px 0;
+  border-top: 1px solid rgba(154, 116, 61, 0.18);
+  font-size: 8.5px;
+  line-height: 1.25;
+}
+
+.ComparisonMetricLabel { color: #806f61; }
+.ComparisonMetric strong { color: #3e3127; font-size: 9px; overflow-wrap: anywhere; }
+
+.NodeHoverStats {
+  pointer-events: none;
+  fill: #6f5b48;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 7.8px;
+  font-weight: 400;
+}
+
+/* Hover enlargement is controlled in JavaScript so the portrait grows without changing layout. */
+.RelationshipNode.NodeHover {
+  filter: drop-shadow(0 4px 7px rgba(47, 41, 36, 0.22));
+}
+
+.LetterTabs {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+
+/* Bubble-driven comparison selection */
+.ComparisonSlots {
+  display: grid;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.ComparisonSlotRow {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 5px 7px;
+  border: 1px solid rgba(154, 116, 61, 0.30);
+  border-radius: 3px;
+  background: rgba(250, 243, 231, 0.58);
+}
+
+.ComparisonSlotTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: 1px solid rgba(107, 36, 48, 0.45);
+  border-radius: 50%;
+  color: #6b2430;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.ComparisonSlotValue {
+  min-width: 0;
+  color: #806f61;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 8.8px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.ComparisonSlotValue.Filled {
+  color: #3e3127;
+  font-weight: 700;
+}
+
+.ComparisonClearButton {
+  width: 100%;
+  margin-top: 8px;
+  padding: 7px 8px;
+  border: 1px solid rgba(117, 91, 64, 0.34);
+  border-radius: 3px;
+  background: rgba(250, 244, 233, 0.78);
+  color: #6b2430;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ComparisonClearButton:hover {
+  border-color: rgba(107, 36, 48, 0.52);
+  background: #f3e7d5;
+}
+
+/* Person A/B stay visually identified on the network while comparing. */
+.PersonNode.CompareASelected .RelationshipNode {
+  stroke: #6b2430 !important;
+  stroke-width: 5.5px !important;
+  filter: drop-shadow(0 0 5px rgba(107, 36, 48, 0.52));
+}
+
+.PersonNode.CompareBSelected .RelationshipNode {
+  stroke: #9a743d !important;
+  stroke-width: 5.5px !important;
+  filter: drop-shadow(0 0 5px rgba(154, 116, 61, 0.52));
+}
+
+.ComparisonMetricValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.ComparisonWinner {
+  margin-left: -4px;
+  margin-right: -4px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 2px;
+  background: rgba(87, 128, 82, 0.09);
+}
+
+.ComparisonWinnerDot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5f8759;
+  box-shadow: 0 0 0 2px rgba(95, 135, 89, 0.13);
 }

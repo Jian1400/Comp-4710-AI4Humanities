@@ -48,17 +48,32 @@ let images = svg.append("defs").attr("id", "images");
 
 setImage("images/png/georgeeliot.png", 0);
 
-let exactLettersByPerson = {};
-let relationshipValues = [];
-let enabledRelationships = new Set();
-
+let relationshipValues = ["family", "friend"];
+let enabledRelationships = new Set(relationshipValues);
 let genderValues = ["female", "male"];
 let enabledGenders = new Set(genderValues);
+
+let LETTER_RANGES = [
+  { value: "all", label: "All letter counts", min: 0, max: Infinity },
+  { value: "0", label: "0 letters", min: 0, max: 0 },
+  { value: "1-9", label: "1–9 letters", min: 1, max: 9 },
+  { value: "10-24", label: "10–24 letters", min: 10, max: 24 },
+  { value: "25-49", label: "25–49 letters", min: 25, max: 49 },
+  { value: "50-99", label: "50–99 letters", min: 50, max: 99 },
+  { value: "100-249", label: "100–249 letters", min: 100, max: 249 },
+  { value: "250-499", label: "250–499 letters", min: 250, max: 499 },
+  { value: "500-999", label: "500–999 letters", min: 500, max: 999 },
+  { value: "1000+", label: "1000+ letters", min: 1000, max: Infinity }
+];
+let activeLetterRange = "all";
+let activeCorrespondenceBalance = "all";
 let networkNodeSelection = null;
 let networkLinkSelection = null;
 let nodeGroupSelection = null;
 let zoomBehavior = null;
-let focusSelectedEnabled = false;
+let activeNetworkMode = "explore";
+let comparisonAIndex = null;
+let comparisonBIndex = null;
 
 // -----------------------------------------------------------------------------
 // Letter adapter
@@ -78,7 +93,6 @@ let focusSelectedEnabled = false;
 // -----------------------------------------------------------------------------
 
 let galleryLettersByPerson = {};
-let letterDataReady = false;
 
 function normalizeLookupName(name) {
   if (!name) return "";
@@ -212,12 +226,8 @@ function getLettersForNode(data) {
   return results;
 }
 
-// Kept for compatibility with the existing details renderer.
-function getExactLettersForNode(data) {
-  return getLettersForNode(data);
-}
 
-d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
+let letterDataPromise = d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
   .then(function(galleryRows) {
     galleryRows.forEach(function(row) {
       parseUpdatedRelation(
@@ -225,8 +235,6 @@ d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
         row["Dublin Core:Relation"]
       );
     });
-
-    letterDataReady = true;
 
     let totalLetters = Object.keys(galleryLettersByPerson).reduce(
       function(total, personKey) {
@@ -243,14 +251,43 @@ d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
       "direct letter links."
     );
 
-    applyFilters();
+    return galleryRows;
   })
   .catch(function(error) {
     console.error(
       "Could not load ../Datasets/UpdatedGeorgeEliotGallery.csv:",
       error
     );
+    return [];
   });
+
+function getLetterStatsForNode(data) {
+  let letters = getLettersForNode(data);
+  let stats = { total: letters.length, to: 0, from: 0, about: 0, balance: "none" };
+
+  letters.forEach(function(letter) {
+    if (letter.relationType === "To") stats.to += 1;
+    if (letter.relationType === "From") stats.from += 1;
+    if (letter.relationType === "About") stats.about += 1;
+  });
+
+  let directionalTotal = stats.to + stats.from;
+  if (directionalTotal > 0) {
+    let toShare = stats.to / directionalTotal;
+    if (toShare > 0.60) stats.balance = "to";
+    else if (toShare < 0.40) stats.balance = "from";
+    else stats.balance = "balanced";
+  }
+
+  return stats;
+}
+
+function correspondenceBalanceLabel(stats) {
+  if (!stats || stats.to + stats.from === 0) return "No To/From correspondence";
+  if (stats.balance === "to") return "To-dominant";
+  if (stats.balance === "from") return "From-dominant";
+  return "Balanced";
+}
 
 
 function normalizeRelationship(value) {
@@ -359,6 +396,28 @@ function firstGalleryImage(value) {
     .filter(Boolean)[0] || "";
 }
 
+function normalizeSearchText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildPersonSearchText(node) {
+  let values = [node["FullName"], node["Dublin Core:Title"]];
+
+  Object.keys(node).forEach(function(key) {
+    if (/(alias|nickname|maiden|married|alternative|alternate|other name|former name)/i.test(key)) {
+      values.push(node[key]);
+    }
+  });
+
+  return normalizeSearchText(values.filter(Boolean).join(" "));
+}
+
 // -----------------------------------------------------------------------------
 // People data
 // -----------------------------------------------------------------------------
@@ -392,6 +451,7 @@ let parseData = d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv", function(row
   node.GenderNormalized = normalizeGender({
     Gender: row["Dublin Core:Type"]
   });
+  node.SearchText = buildPersonSearchText(node);
 
   let person = {
     name: node["FullName"],
@@ -415,16 +475,18 @@ let parseData = d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv", function(row
   links.push({ source: 0, target: node.index });
 });
 
-parseData.then(function() {
+Promise.all([parseData, letterDataPromise]).then(function() {
   people.sort(function(a, b) {
     return a.name.localeCompare(b.name);
   });
 
-  populateSearchList();
-  buildRelationshipFilters();
-  buildGenderFilters();
+  buildCombinedFilters();
+  buildLetterRangeFilter();
+  updateComparison();
   drawNetwork();
   bindControls();
+  refreshResearchFilterOptions();
+  updateComparison();
 
   document.getElementById("NetworkStatus").textContent =
     (nodes.length - 1) + " people loaded";
@@ -766,7 +828,16 @@ networkNodeSelection = nodeGroupSelection
       if (!d) return;
 
       if (d.index === 0) {
+        if (activeNetworkMode === "comparison") {
+          clearComparison();
+          return;
+        }
         returnToNetworkView();
+        return;
+      }
+
+      if (activeNetworkMode === "comparison") {
+        selectComparisonPerson(d);
         return;
       }
 
@@ -788,7 +859,6 @@ networkNodeSelection = nodeGroupSelection
   svg.on("click.background", function() {
     if (d3.event.target === svg.node()) {
       clearDisplay(true);
-      applyFocusSelectedState();
       showExploreSidebar();
       applyInitialView(350);
     }
@@ -866,7 +936,6 @@ function selectPerson(data, shouldFocus) {
   window.selectedPersonIndex = data.index;
   setSelectedPerson(data);
   showSummaryForData(data);
-  applyFocusSelectedState();
 
   let biography = document.getElementById("Biography");
   if (biography) {
@@ -883,44 +952,17 @@ function selectPerson(data, shouldFocus) {
     "Selected " + data.FullName;
 }
 
-function applyFocusSelectedState() {
-  let selectedIndex = window.selectedPersonIndex;
-
-  d3.selectAll(".PersonNode")
-    .classed("FocusDimmed", function(d) {
-      return (
-        focusSelectedEnabled &&
-        selectedIndex &&
-        d.index !== 0 &&
-        d.index !== selectedIndex
-      );
-    });
-
-  d3.selectAll(".RelationshipLine")
-    .classed("FocusDimmedLine", function(d) {
-      let targetIndex = d.target.index !== undefined ? d.target.index : d.target;
-      return (
-        focusSelectedEnabled &&
-        selectedIndex &&
-        targetIndex !== selectedIndex
-      );
-    });
-}
-
 // -----------------------------------------------------------------------------
 // Search
 // -----------------------------------------------------------------------------
 
-function populateSearchList() {
-  // Search uses live results now.
-}
 
 function renderPeopleSearch() {
   let input = document.getElementById("searchBar");
   let results = document.getElementById("searchResults");
   if (!input || !results) return;
 
-  let term = input.value.trim().toLowerCase();
+  let term = normalizeSearchText(input.value);
 
   if (!term) {
     results.hidden = true;
@@ -930,7 +972,7 @@ function renderPeopleSearch() {
 
   let matches = people
     .filter(function(person) {
-      return person.name.toLowerCase().includes(term);
+      return person.data.SearchText.includes(term);
     })
     .slice(0, 8);
 
@@ -976,20 +1018,18 @@ function renderPeopleSearch() {
 }
 
 function findPerson() {
-  let searchTerm = document
-    .getElementById("searchBar")
-    .value
-    .trim()
-    .toLowerCase();
+  let searchTerm = normalizeSearchText(
+    document.getElementById("searchBar").value
+  );
 
   if (!searchTerm) return;
 
   let exact = people.find(function(person) {
-    return person.name.toLowerCase() === searchTerm;
+    return normalizeSearchText(person.name) === searchTerm;
   });
 
   let partial = people.find(function(person) {
-    return person.name.toLowerCase().includes(searchTerm);
+    return person.data.SearchText.includes(searchTerm);
   });
 
   let match = exact || partial;
@@ -1025,9 +1065,6 @@ function resetNetworkSelection() {
   document.getElementById("searchBar").value = "";
   clearDisplay(true);
 
-  d3.selectAll(".PersonNode").classed("FocusDimmed", false);
-  d3.selectAll(".RelationshipLine").classed("FocusDimmedLine", false);
-
   if (zoomBehavior) {
     svg
       .transition()
@@ -1040,127 +1077,130 @@ function resetNetworkSelection() {
 }
 
 // -----------------------------------------------------------------------------
-// Filters
+// Filters + research comparison
 // -----------------------------------------------------------------------------
 
-function uniqueRelationships() {
-  let values = {};
-
-  nodes.slice(1).forEach(function(node) {
-    let key = String(node.Relationship || "other").trim().toLowerCase();
-    values[key] = true;
-  });
-
-  return Object.keys(values).sort();
-}
-
-function buildRelationshipFilters() {
-  relationshipValues = ["family", "friend"];
+function buildCombinedFilters() {
   enabledRelationships = new Set(relationshipValues);
-
-  let container = document.getElementById("relationshipFilters");
-  let legend = document.getElementById("legendItems");
-
-  container.innerHTML = "";
-  if (legend) legend.innerHTML = "";
-
-  relationshipValues.forEach(function(value) {
-    let label = document.createElement("label");
-    label.className = "RelationshipPill";
-
-    let checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.value = value;
-    checkbox.checked = true;
-
-    let text = document.createElement("span");
-    text.textContent = capitalizeWords(value);
-
-    checkbox.addEventListener("change", function() {
-      if (checkbox.checked) {
-        enabledRelationships.add(value);
-      } else {
-        enabledRelationships.delete(value);
-      }
-      applyFilters();
-    });
-
-    label.appendChild(checkbox);
-    label.appendChild(text);
-    container.appendChild(label);
-  });
-
-  if (legend) {
-    [
-      { label: "Female", color: genderColor("female") },
-      { label: "Male", color: genderColor("male") }
-    ].forEach(function(entry) {
-      let item = document.createElement("span");
-      item.className = "LegendItem";
-
-      let dot = document.createElement("span");
-      dot.className = "LegendDot GenderLegendDot";
-      dot.style.backgroundColor = "transparent";
-      dot.style.borderColor = entry.color;
-
-      let legendText = document.createElement("span");
-      legendText.textContent = entry.label;
-
-      item.appendChild(dot);
-      item.appendChild(legendText);
-      legend.appendChild(item);
-    });
-  }
-}
-
-
-
-function buildGenderFilters() {
   enabledGenders = new Set(genderValues);
 
-  let container = document.getElementById("genderFilters");
-  if (!container) return;
-
+  let container = document.getElementById("combinedFilters");
   container.innerHTML = "";
 
-  genderValues.forEach(function(value) {
+  [
+    { type: "relationship", value: "family", label: "Family", className: "FilterFamily" },
+    { type: "relationship", value: "friend", label: "Friend", className: "FilterFriend" },
+    { type: "gender", value: "female", label: "Female", className: "FilterFemale" },
+    { type: "gender", value: "male", label: "Male", className: "FilterMale" }
+  ].forEach(function(config) {
     let label = document.createElement("label");
-    label.className = "RelationshipPill GenderPill";
+    label.className = "RelationshipPill " + config.className;
 
     let checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.value = value;
     checkbox.checked = true;
+    checkbox.dataset.filterType = config.type;
+    checkbox.value = config.value;
+
+    let check = document.createElement("span");
+    check.className = "FilterCheck";
+    check.setAttribute("aria-hidden", "true");
 
     let text = document.createElement("span");
-    text.textContent = capitalizeWords(value);
+    text.textContent = config.label;
 
     checkbox.addEventListener("change", function() {
-      if (checkbox.checked) {
-        enabledGenders.add(value);
-      } else {
-        enabledGenders.delete(value);
-      }
-
+      let set = config.type === "relationship" ? enabledRelationships : enabledGenders;
+      if (checkbox.checked) set.add(config.value);
+      else set.delete(config.value);
+      refreshResearchFilterOptions();
       applyFilters();
     });
 
     label.appendChild(checkbox);
+    label.appendChild(check);
     label.appendChild(text);
     container.appendChild(label);
   });
+}
+
+function rangeForValue(value) {
+  return LETTER_RANGES.find(function(range) { return range.value === value; }) || LETTER_RANGES[0];
+}
+
+function statsPassLetterRange(stats, rangeValue) {
+  let range = rangeForValue(rangeValue);
+  return stats.total >= range.min && stats.total <= range.max;
+}
+
+function nodePassesBaseFilters(node) {
+  if (node.index === 0) return true;
+  let relationship = normalizeRelationship(node.Relationship);
+  return enabledRelationships.has(relationship) && enabledGenders.has(node.GenderNormalized);
 }
 
 
 function nodePassesFilters(node) {
   if (node.index === 0) return true;
+  if (!nodePassesBaseFilters(node)) return false;
 
-  let relationship = normalizeRelationship(node.Relationship);
-  if (!enabledRelationships.has(relationship)) return false;
-
-  if (!enabledGenders.has(node.GenderNormalized)) return false;
+  let stats = getLetterStatsForNode(node);
+  if (!statsPassLetterRange(stats, activeLetterRange)) return false;
+  if (activeCorrespondenceBalance !== "all" && stats.balance !== activeCorrespondenceBalance) return false;
 
   return true;
+}
+
+function buildLetterRangeFilter() {
+  let select = document.getElementById("letterRangeFilter");
+  if (!select) return;
+  select.innerHTML = "";
+
+  LETTER_RANGES.forEach(function(range) {
+    let option = document.createElement("option");
+    option.value = range.value;
+    option.textContent = range.label;
+    select.appendChild(option);
+  });
+
+  select.value = activeLetterRange;
+}
+
+function refreshResearchFilterOptions() {
+  let rangeSelect = document.getElementById("letterRangeFilter");
+  let balanceSelect = document.getElementById("correspondenceBalanceFilter");
+  let baseNodes = nodes.slice(1).filter(nodePassesBaseFilters);
+
+  if (rangeSelect) {
+    Array.from(rangeSelect.options).forEach(function(option) {
+      let range = rangeForValue(option.value);
+      let count = baseNodes.filter(function(node) {
+        let stats = getLetterStatsForNode(node);
+        let balanceOkay = activeCorrespondenceBalance === "all" || stats.balance === activeCorrespondenceBalance;
+        return balanceOkay && stats.total >= range.min && stats.total <= range.max;
+      }).length;
+      option.textContent = range.label + " (" + count + ")";
+    });
+    rangeSelect.value = activeLetterRange;
+  }
+
+  if (balanceSelect) {
+    let labels = {
+      all: "All correspondence patterns",
+      to: "To-dominant",
+      balanced: "Balanced",
+      from: "From-dominant"
+    };
+    Array.from(balanceSelect.options).forEach(function(option) {
+      let count = baseNodes.filter(function(node) {
+        let stats = getLetterStatsForNode(node);
+        let rangeOkay = statsPassLetterRange(stats, activeLetterRange);
+        return rangeOkay && (option.value === "all" || stats.balance === option.value);
+      }).length;
+      option.textContent = labels[option.value] + " (" + count + ")";
+    });
+    balanceSelect.value = activeCorrespondenceBalance;
+  }
 }
 
 function applyFilters() {
@@ -1178,10 +1218,199 @@ function applyFilters() {
   let visible = nodes.slice(1).filter(nodePassesFilters).length;
   document.getElementById("NetworkStatus").textContent =
     visible + " of " + (nodes.length - 1) + " people visible";
-
-  applyFocusSelectedState();
 }
 
+function comparisonMetric(label, value, winner) {
+  let row = document.createElement("div");
+  row.className = "ComparisonMetric" + (winner ? " ComparisonWinner" : "");
+
+  let key = document.createElement("span");
+  key.className = "ComparisonMetricLabel";
+  key.textContent = label;
+
+  let valueWrap = document.createElement("span");
+  valueWrap.className = "ComparisonMetricValue";
+
+  if (winner) {
+    let dot = document.createElement("span");
+    dot.className = "ComparisonWinnerDot";
+    dot.setAttribute("aria-label", "Higher comparative value");
+    valueWrap.appendChild(dot);
+  }
+
+  let val = document.createElement("strong");
+  val.textContent = value;
+  valueWrap.appendChild(val);
+
+  row.appendChild(key);
+  row.appendChild(valueWrap);
+  return row;
+}
+
+function buildComparisonCard(node, title, winners) {
+  let stats = getLetterStatsForNode(node);
+  let card = document.createElement("article");
+  card.className = "ComparisonCard";
+
+  let tag = document.createElement("div");
+  tag.className = "ComparisonCardTag";
+  tag.textContent = title;
+  card.appendChild(tag);
+
+  let name = document.createElement("h3");
+  name.textContent = node.FullName;
+  card.appendChild(name);
+
+  let bucket = capitalizeWords(closenessBucket(node));
+  card.appendChild(comparisonMetric("Relationship", capitalizeWords(node.Relationship), false));
+  card.appendChild(comparisonMetric("Closeness", bucket + " (" + node.RawCloseness + ")", winners.closeness));
+  card.appendChild(comparisonMetric("All letters", stats.total, winners.total));
+  card.appendChild(comparisonMetric("To", stats.to, winners.to));
+  card.appendChild(comparisonMetric("From", stats.from, winners.from));
+  card.appendChild(comparisonMetric("About", stats.about, winners.about));
+  card.appendChild(comparisonMetric("Balance", correspondenceBalanceLabel(stats), false));
+
+  return card;
+}
+
+function comparisonWinners(a, b) {
+  let aStats = getLetterStatsForNode(a);
+  let bStats = getLetterStatsForNode(b);
+
+  function higher(aValue, bValue) {
+    return {
+      a: aValue > bValue,
+      b: bValue > aValue
+    };
+  }
+
+  // Lower numeric Closeness means the person is placed in a closer curated ring.
+  let closeness = {
+    a: Number(a.RawCloseness) < Number(b.RawCloseness),
+    b: Number(b.RawCloseness) < Number(a.RawCloseness)
+  };
+
+  return {
+    a: {
+      closeness: closeness.a,
+      total: higher(aStats.total, bStats.total).a,
+      to: higher(aStats.to, bStats.to).a,
+      from: higher(aStats.from, bStats.from).a,
+      about: higher(aStats.about, bStats.about).a
+    },
+    b: {
+      closeness: closeness.b,
+      total: higher(aStats.total, bStats.total).b,
+      to: higher(aStats.to, bStats.to).b,
+      from: higher(aStats.from, bStats.from).b,
+      about: higher(aStats.about, bStats.about).b
+    }
+  };
+}
+
+function updateComparisonNodeStyles() {
+  d3.selectAll(".PersonNode")
+    .classed("CompareASelected", function(d) {
+      return comparisonAIndex !== null && d.index === comparisonAIndex;
+    })
+    .classed("CompareBSelected", function(d) {
+      return comparisonBIndex !== null && d.index === comparisonBIndex;
+    });
+}
+
+function clearComparison() {
+  comparisonAIndex = null;
+  comparisonBIndex = null;
+  updateComparisonNodeStyles();
+  updateComparison();
+}
+
+function selectComparisonPerson(node) {
+  if (!node || node.index === 0) return;
+
+  if (comparisonAIndex === node.index) {
+    comparisonAIndex = null;
+    if (comparisonBIndex !== null) {
+      comparisonAIndex = comparisonBIndex;
+      comparisonBIndex = null;
+    }
+  } else if (comparisonBIndex === node.index) {
+    comparisonBIndex = null;
+  } else if (comparisonAIndex === null) {
+    comparisonAIndex = node.index;
+  } else if (comparisonBIndex === null) {
+    comparisonBIndex = node.index;
+  } else {
+    // Keep Person A as the anchor and replace Person B for quick comparisons.
+    comparisonBIndex = node.index;
+  }
+
+  updateComparisonNodeStyles();
+  updateComparison();
+}
+
+function updateComparison() {
+  let message = document.getElementById("ComparisonMessage");
+  let results = document.getElementById("ComparisonResults");
+  let aSlot = document.getElementById("ComparisonASlot");
+  let bSlot = document.getElementById("ComparisonBSlot");
+  if (!message || !results || !aSlot || !bSlot) return;
+
+  let a = comparisonAIndex === null
+    ? null
+    : nodes.find(function(node) { return node.index === comparisonAIndex; });
+  let b = comparisonBIndex === null
+    ? null
+    : nodes.find(function(node) { return node.index === comparisonBIndex; });
+
+  aSlot.textContent = a ? a.FullName : "Tap a bubble for Person A";
+  bSlot.textContent = b ? b.FullName : "Tap a second bubble for Person B";
+  aSlot.classList.toggle("Filled", Boolean(a));
+  bSlot.classList.toggle("Filled", Boolean(b));
+
+  results.innerHTML = "";
+
+  if (!a || !b) {
+    message.textContent = !a
+      ? "Tap any person bubble in the network to choose Person A."
+      : "Person A selected. Tap another bubble to choose Person B.";
+    message.hidden = false;
+    results.hidden = true;
+    return;
+  }
+
+  let winners = comparisonWinners(a, b);
+  message.textContent = "Green markers indicate the closer person or the person with the higher letter count. Ties and correspondence balance are left unmarked.";
+  message.hidden = false;
+  results.hidden = false;
+  results.appendChild(buildComparisonCard(a, "Person A", winners.a));
+  results.appendChild(buildComparisonCard(b, "Person B", winners.b));
+}
+
+function setNetworkMode(mode) {
+  let explore = document.getElementById("ExploreControls");
+  let compare = document.getElementById("ComparisonControls");
+  let exploreButton = document.getElementById("ExploreModeButton");
+  let compareButton = document.getElementById("ComparisonModeButton");
+  let comparing = mode === "comparison";
+
+  activeNetworkMode = comparing ? "comparison" : "explore";
+  explore.hidden = comparing;
+  compare.hidden = !comparing;
+  exploreButton.classList.toggle("Active", !comparing);
+  compareButton.classList.toggle("Active", comparing);
+
+  if (comparing) {
+    clearDisplay(true);
+    showExploreSidebar();
+    updateComparisonNodeStyles();
+    updateComparison();
+  } else {
+    d3.selectAll(".PersonNode")
+      .classed("CompareASelected", false)
+      .classed("CompareBSelected", false);
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Controls
@@ -1192,16 +1421,12 @@ function bindControls() {
   let searchResults = document.getElementById("searchResults");
 
   searchBar.addEventListener("input", renderPeopleSearch);
-
   searchBar.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
       findPerson();
       searchResults.hidden = true;
     }
-
-    if (event.key === "Escape") {
-      searchResults.hidden = true;
-    }
+    if (event.key === "Escape") searchResults.hidden = true;
   });
 
   document.getElementById("clearButton").addEventListener("click", function() {
@@ -1211,87 +1436,66 @@ function bindControls() {
     searchBar.focus();
   });
 
-  document.getElementById("CloseButton").addEventListener("click", function() {
-    returnToNetworkView();
-  });
+  document.getElementById("CloseButton").addEventListener("click", returnToNetworkView);
+  document.getElementById("BackToNetworkButton").addEventListener("click", returnToNetworkView);
 
-  document.getElementById("BackToNetworkButton").addEventListener("click", function() {
-    returnToNetworkView();
-  });
+  document.getElementById("resetFiltersButton").addEventListener("click", resetFilters);
 
-
-  document.getElementById("selectAllRelationships").addEventListener("click", function() {
-    enabledRelationships = new Set(relationshipValues);
-
-    document
-      .querySelectorAll("#relationshipFilters input[type='checkbox']")
-      .forEach(function(input) {
-        input.checked = true;
-      });
-
+  document.getElementById("letterRangeFilter").addEventListener("change", function(event) {
+    activeLetterRange = event.target.value;
+    refreshResearchFilterOptions();
     applyFilters();
   });
 
-  document.getElementById("focusSelectedToggle").addEventListener("change", function(event) {
-    focusSelectedEnabled = event.target.checked;
-    applyFocusSelectedState();
+  document.getElementById("correspondenceBalanceFilter").addEventListener("change", function(event) {
+    activeCorrespondenceBalance = event.target.value;
+    refreshResearchFilterOptions();
+    applyFilters();
   });
 
-  document.getElementById("zoomInButton").addEventListener("click", function() {
-    svg.transition().duration(250).call(zoomBehavior.scaleBy, 1.25);
+  document.getElementById("ExploreModeButton").addEventListener("click", function() {
+    setNetworkMode("explore");
+  });
+  document.getElementById("ComparisonModeButton").addEventListener("click", function() {
+    setNetworkMode("comparison");
   });
 
-  document.getElementById("zoomOutButton").addEventListener("click", function() {
-    svg.transition().duration(250).call(zoomBehavior.scaleBy, 0.8);
-  });
-
-  document.getElementById("resetViewButton").addEventListener("click", function() {
-    svg
-      .transition()
-      .duration(450)
-      .call(zoomBehavior.transform, initialViewTransform());
-  });
-
+  document.getElementById("ClearComparisonButton").addEventListener("click", clearComparison);
 
   document.addEventListener("click", function(event) {
-    if (
-      !event.target.closest(".SearchWrap") &&
-      !event.target.closest(".SearchResults")
-    ) {
+    if (!event.target.closest(".SearchWrap") && !event.target.closest(".SearchResults")) {
       searchResults.hidden = true;
     }
   });
 }
 
-function resetAll() {
-  enabledGenders = new Set(genderValues);
-  document
-    .querySelectorAll("#genderFilters input")
-    .forEach(function(checkbox) {
-      checkbox.checked = true;
-    });
-  showExploreSidebar();
-  document.getElementById("searchBar").value = "";
-
-  focusSelectedEnabled = false;
-  let focusToggle = document.getElementById("focusSelectedToggle");
-  if (focusToggle) focusToggle.checked = false;
-
+function resetFilters() {
   enabledRelationships = new Set(relationshipValues);
+  enabledGenders = new Set(genderValues);
+  activeLetterRange = "all";
+  activeCorrespondenceBalance = "all";
 
-  document
-    .querySelectorAll("#relationshipFilters input[type='checkbox']")
-    .forEach(function(input) {
-      input.checked = true;
-    });
+  document.querySelectorAll("#combinedFilters input[type='checkbox']").forEach(function(input) {
+    input.checked = true;
+  });
 
-  clearDisplay(true);
-  d3.selectAll(".PersonNode").classed("FocusDimmed", false);
-  d3.selectAll(".RelationshipLine").classed("FocusDimmedLine", false);
+  document.getElementById("letterRangeFilter").value = "all";
+  document.getElementById("correspondenceBalanceFilter").value = "all";
+  refreshResearchFilterOptions();
   applyFilters();
+}
 
-  svg
-    .transition()
-    .duration(450)
-    .call(zoomBehavior.transform, initialViewTransform());
+function resetAll() {
+  resetFilters();
+  showExploreSidebar();
+  setNetworkMode("explore");
+  document.getElementById("searchBar").value = "";
+  clearDisplay(true);
+
+  if (zoomBehavior) {
+    svg
+      .transition()
+      .duration(450)
+      .call(zoomBehavior.transform, initialViewTransform());
+  }
 }

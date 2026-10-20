@@ -1,26 +1,8 @@
 // -----------------------
 // Shared constants
 // -----------------------
-let FRIEND_COLOR = "#5f7f69";
-let FRIEND_SECONDARY_COLOR = "#e1ece4";
-
-let FAMILY_COLOR = "#8a5260";
-let FAMILY_SECONDARY_COLOR = "#f2e5e8";
-
-let ACQ_COLOR = "#a98245";
-let ACQ_SECONDARY_COLOR = "#f4edde";
-
-let GE_COLOR = "#6d1f2d";
-let SEARCHED_NODE_COLOR = "#c19a57";
-
-let MAGNIFYING_RATIO = 1;
-let MARGIN = 20;
 let WIDTH = 1300;
 let HEIGHT = 1000;
-let USER_MENU_WIDTH_SHOW = "340px";
-let USER_MENU_WIDTH_HIDE = "120px";
-let IMAGE_R = 80;
-let USER_MENU_SHOWN = true;
 
 // -----------------------
 // Images + names
@@ -41,35 +23,6 @@ function setImage(imagePath, index) {
     .attr("x", 0);
 }
 
-function parseFullName(node) {
-  let name = (node["Last Name"] || "") + ",";
-  name += " " + (node["First Name"] || "");
-
-  if (node["Nickname"]) {
-    name += ' "' + node["Nickname"] + '"';
-  }
-
-  if (node["Second Names"]) {
-    name += " " + node["Second Names"];
-  }
-
-  node["FullName"] = name.trim();
-  return node;
-}
-
-function relationshipColor(value) {
-  let relationship = String(value || "").trim().toLowerCase();
-  if (relationship === "friend") return FRIEND_COLOR;
-  if (relationship === "family") return FAMILY_COLOR;
-  return ACQ_COLOR;
-}
-
-function relationshipSecondaryColor(value) {
-  let relationship = String(value || "").trim().toLowerCase();
-  if (relationship === "friend") return FRIEND_SECONDARY_COLOR;
-  if (relationship === "family") return FAMILY_SECONDARY_COLOR;
-  return ACQ_SECONDARY_COLOR;
-}
 
 // -----------------------
 // Hover + selection
@@ -79,10 +32,18 @@ function selectNode(node, data) {
   if (!data || data.index === 0) return;
 
   d3.selectAll(".NodeHoverLabel").remove();
-
   node.classed("NodeHover", true);
 
-  showHoverName(node, data);
+  let enlargedRadius = Math.max(Number(data.Radius) * 1.65, Number(data.Radius) + 10);
+  node
+    .interrupt()
+    .transition()
+    .duration(130)
+    .ease(d3.easeCubicOut)
+    .attr("r", enlargedRadius);
+
+  d3.select(node.node().parentNode).raise();
+  showHoverName(node, data, enlargedRadius);
   highlightPersonLink(data.index, true);
 }
 
@@ -91,6 +52,12 @@ function deselectNode(node, data) {
   if (!data) return;
 
   node.classed("NodeHover", false);
+  node
+    .interrupt()
+    .transition()
+    .duration(130)
+    .ease(d3.easeCubicOut)
+    .attr("r", Number(data.Radius));
 
   d3.selectAll(".NodeHoverLabel").remove();
 
@@ -99,23 +66,25 @@ function deselectNode(node, data) {
   }
 }
 
-function showHoverName(node, data) {
+function showHoverName(node, data, displayRadius) {
   data = data || node.data()[0];
   if (!data || data.index === 0) return;
 
   d3.selectAll(".NodeHoverLabel").remove();
 
-  // Use a dedicated layer above every node so other portraits never cover
-  // the hover label. The layer is inside zoomLayer, so it pans/zooms naturally.
+  let stats = typeof getLetterStatsForNode === "function"
+    ? getLetterStatsForNode(data)
+    : { total: 0, to: 0, from: 0, about: 0 };
+
   let group = labelLayer
     .append("g")
     .attr("class", "NodeHoverLabel")
     .attr(
       "transform",
-      "translate(" + data.x + "," + (data.y + Number(data.Radius) + 24) + ")"
+      "translate(" + data.x + "," + (data.y + Number(displayRadius || data.Radius) + 27) + ")"
     );
 
-  let text = group
+  group
     .append("text")
     .attr("class", "NodeHoverName")
     .attr("x", 0)
@@ -124,18 +93,27 @@ function showHoverName(node, data) {
     .attr("dominant-baseline", "middle")
     .text(data.FullName);
 
-  // Measure the rendered text and place a small archival plaque behind it.
-  let box = text.node().getBBox();
-
   group
-    .insert("rect", "text")
+    .append("text")
+    .attr("class", "NodeHoverStats")
+    .attr("x", 0)
+    .attr("y", 16)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .text(
+      stats.total + " letters · To " + stats.to + " · From " + stats.from + " · About " + stats.about
+    );
+
+  let box = group.node().getBBox();
+  group
+    .insert("rect", ":first-child")
     .attr("class", "NodeHoverPlaque")
-    .attr("x", box.x - 7)
-    .attr("y", box.y - 4)
-    .attr("width", box.width + 14)
-    .attr("height", box.height + 8)
-    .attr("rx", 1)
-    .attr("ry", 1);
+    .attr("x", box.x - 8)
+    .attr("y", box.y - 5)
+    .attr("width", box.width + 16)
+    .attr("height", box.height + 10)
+    .attr("rx", 2)
+    .attr("ry", 2);
 }
 
 function setSelectedPerson(data) {
@@ -171,16 +149,6 @@ function highlightPersonLink(index, on) {
 // -----------------------
 // Biography
 // -----------------------
-function showSummary(node) {
-  let data = node && node.data ? node.data()[0] : null;
-  if (!data || data.index === 0) return;
-
-  setSelectedPerson(data);
-
-  if (typeof showSummaryForData === "function") {
-    showSummaryForData(data);
-  }
-}
 
 function handleBiographyText(biography) {
   return biography ? biography : "No biography is currently available.";
@@ -682,27 +650,6 @@ let setIndex = (function() {
   };
 })();
 
-d3.selection.prototype.moveToFront = function() {
-  return this.each(function() {
-    this.parentNode.appendChild(this);
-  });
-};
-
-function toggleMenu() {
-  if (USER_MENU_SHOWN) {
-    document.getElementById("Toggleable").style.display = "none";
-    document.getElementById("ButtonText").innerHTML = "Show";
-    document.getElementById("ButtonArrow").innerHTML = "›";
-    document.getElementById("UserMenu").style.width = USER_MENU_WIDTH_HIDE;
-  } else {
-    document.getElementById("UserMenu").style.width = USER_MENU_WIDTH_SHOW;
-    document.getElementById("Toggleable").style.display = "block";
-    document.getElementById("ButtonText").innerHTML = "Hide Menu";
-    document.getElementById("ButtonArrow").innerHTML = "‹";
-  }
-
-  USER_MENU_SHOWN = !USER_MENU_SHOWN;
-}
 
 function capitalizeWords(value) {
   return String(value || "")
