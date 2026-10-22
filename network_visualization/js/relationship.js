@@ -66,7 +66,6 @@ let LETTER_RANGES = [
   { value: "1000+", label: "1000+ letters", min: 1000, max: Infinity }
 ];
 let activeLetterRange = "all";
-let activeCorrespondenceBalance = "all";
 let networkNodeSelection = null;
 let networkLinkSelection = null;
 let nodeGroupSelection = null;
@@ -263,7 +262,7 @@ let letterDataPromise = d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
 
 function getLetterStatsForNode(data) {
   let letters = getLettersForNode(data);
-  let stats = { total: letters.length, to: 0, from: 0, about: 0, balance: "none" };
+  let stats = { total: letters.length, to: 0, from: 0, about: 0 };
 
   letters.forEach(function(letter) {
     if (letter.relationType === "To") stats.to += 1;
@@ -271,24 +270,9 @@ function getLetterStatsForNode(data) {
     if (letter.relationType === "About") stats.about += 1;
   });
 
-  let directionalTotal = stats.to + stats.from;
-  if (directionalTotal > 0) {
-    let toShare = stats.to / directionalTotal;
-    if (toShare > 0.60) stats.balance = "to";
-    else if (toShare < 0.40) stats.balance = "from";
-    else stats.balance = "balanced";
-  }
 
   return stats;
 }
-
-function correspondenceBalanceLabel(stats) {
-  if (!stats || stats.to + stats.from === 0) return "No To/From correspondence";
-  if (stats.balance === "to") return "To-dominant";
-  if (stats.balance === "from") return "From-dominant";
-  return "Balanced";
-}
-
 
 function normalizeRelationship(value) {
   return String(value || "").trim().toLowerCase() === "family"
@@ -868,6 +852,21 @@ networkNodeSelection = nodeGroupSelection
 }
 
 
+function isMobileSidebarLayout() {
+  return window.matchMedia && window.matchMedia("(max-width: 760px)").matches;
+}
+
+function setSidebarOpen(open) {
+  let workspace = document.getElementById("Workspace");
+  let sidebar = document.getElementById("SidebarColumn");
+  let openButton = document.getElementById("SidebarOpenButton");
+  if (!workspace || !sidebar) return;
+
+  workspace.classList.toggle("SidebarCollapsed", !open);
+  sidebar.setAttribute("aria-hidden", open ? "false" : "true");
+  if (openButton) openButton.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
 function showExploreSidebar() {
   let explore = document.getElementById("ExplorePanel");
   let person = document.getElementById("PersonPanel");
@@ -886,6 +885,7 @@ function showPersonSidebar() {
   if (explore) explore.hidden = true;
   if (person) person.hidden = false;
   if (sidebar) sidebar.scrollTop = 0;
+  setSidebarOpen(true);
 }
 
 function returnToNetworkView() {
@@ -1087,41 +1087,69 @@ function buildCombinedFilters() {
   let container = document.getElementById("combinedFilters");
   container.innerHTML = "";
 
-  [
-    { type: "relationship", value: "family", label: "Family", className: "FilterFamily" },
-    { type: "relationship", value: "friend", label: "Friend", className: "FilterFriend" },
-    { type: "gender", value: "female", label: "Female", className: "FilterFemale" },
-    { type: "gender", value: "male", label: "Male", className: "FilterMale" }
-  ].forEach(function(config) {
-    let label = document.createElement("label");
-    label.className = "RelationshipPill " + config.className;
+  function buildSelector(title, type, options) {
+    let group = document.createElement("div");
+    group.className = "FilterSelectorGroup";
 
-    let checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = true;
-    checkbox.dataset.filterType = config.type;
-    checkbox.value = config.value;
+    let heading = document.createElement("div");
+    heading.className = "FilterSelectorLabel";
+    heading.textContent = title;
+    group.appendChild(heading);
 
-    let check = document.createElement("span");
-    check.className = "FilterCheck";
-    check.setAttribute("aria-hidden", "true");
+    let controls = document.createElement("div");
+    controls.className = "FilterSegmentedControl";
+    controls.setAttribute("role", "group");
+    controls.setAttribute("aria-label", title + " filter");
 
-    let text = document.createElement("span");
-    text.textContent = config.label;
+    options.forEach(function(option) {
+      let button = document.createElement("button");
+      button.type = "button";
+      button.className = "FilterSegment " + (option.className || "");
+      button.dataset.filterType = type;
+      button.dataset.filterValue = option.value;
+      button.textContent = option.label;
+      button.classList.toggle("Active", option.value === "all");
+      button.setAttribute("aria-pressed", option.value === "all" ? "true" : "false");
 
-    checkbox.addEventListener("change", function() {
-      let set = config.type === "relationship" ? enabledRelationships : enabledGenders;
-      if (checkbox.checked) set.add(config.value);
-      else set.delete(config.value);
-      refreshResearchFilterOptions();
-      applyFilters();
+      button.addEventListener("click", function() {
+        controls.querySelectorAll(".FilterSegment").forEach(function(segment) {
+          let active = segment === button;
+          segment.classList.toggle("Active", active);
+          segment.setAttribute("aria-pressed", active ? "true" : "false");
+        });
+
+        if (type === "relationship") {
+          enabledRelationships = option.value === "all"
+            ? new Set(relationshipValues)
+            : new Set([option.value]);
+        } else {
+          enabledGenders = option.value === "all"
+            ? new Set(genderValues)
+            : new Set([option.value]);
+        }
+
+        refreshResearchFilterOptions();
+        applyFilters();
+      });
+
+      controls.appendChild(button);
     });
 
-    label.appendChild(checkbox);
-    label.appendChild(check);
-    label.appendChild(text);
-    container.appendChild(label);
-  });
+    group.appendChild(controls);
+    container.appendChild(group);
+  }
+
+  buildSelector("Relationship", "relationship", [
+    { value: "all", label: "All" },
+    { value: "family", label: "Family", className: "FilterFamily" },
+    { value: "friend", label: "Friend", className: "FilterFriend" }
+  ]);
+
+  buildSelector("Gender", "gender", [
+    { value: "all", label: "All" },
+    { value: "female", label: "Female", className: "FilterFemale" },
+    { value: "male", label: "Male", className: "FilterMale" }
+  ]);
 }
 
 function rangeForValue(value) {
@@ -1146,7 +1174,6 @@ function nodePassesFilters(node) {
 
   let stats = getLetterStatsForNode(node);
   if (!statsPassLetterRange(stats, activeLetterRange)) return false;
-  if (activeCorrespondenceBalance !== "all" && stats.balance !== activeCorrespondenceBalance) return false;
 
   return true;
 }
@@ -1168,7 +1195,6 @@ function buildLetterRangeFilter() {
 
 function refreshResearchFilterOptions() {
   let rangeSelect = document.getElementById("letterRangeFilter");
-  let balanceSelect = document.getElementById("correspondenceBalanceFilter");
   let baseNodes = nodes.slice(1).filter(nodePassesBaseFilters);
 
   if (rangeSelect) {
@@ -1176,30 +1202,11 @@ function refreshResearchFilterOptions() {
       let range = rangeForValue(option.value);
       let count = baseNodes.filter(function(node) {
         let stats = getLetterStatsForNode(node);
-        let balanceOkay = activeCorrespondenceBalance === "all" || stats.balance === activeCorrespondenceBalance;
-        return balanceOkay && stats.total >= range.min && stats.total <= range.max;
+        return stats.total >= range.min && stats.total <= range.max;
       }).length;
       option.textContent = range.label + " (" + count + ")";
     });
     rangeSelect.value = activeLetterRange;
-  }
-
-  if (balanceSelect) {
-    let labels = {
-      all: "All correspondence patterns",
-      to: "To-dominant",
-      balanced: "Balanced",
-      from: "From-dominant"
-    };
-    Array.from(balanceSelect.options).forEach(function(option) {
-      let count = baseNodes.filter(function(node) {
-        let stats = getLetterStatsForNode(node);
-        let rangeOkay = statsPassLetterRange(stats, activeLetterRange);
-        return rangeOkay && (option.value === "all" || stats.balance === option.value);
-      }).length;
-      option.textContent = labels[option.value] + " (" + count + ")";
-    });
-    balanceSelect.value = activeCorrespondenceBalance;
   }
 }
 
@@ -1268,7 +1275,6 @@ function buildComparisonCard(node, title, winners) {
   card.appendChild(comparisonMetric("To", stats.to, winners.to));
   card.appendChild(comparisonMetric("From", stats.from, winners.from));
   card.appendChild(comparisonMetric("About", stats.about, winners.about));
-  card.appendChild(comparisonMetric("Balance", correspondenceBalanceLabel(stats), false));
 
   return card;
 }
@@ -1347,6 +1353,12 @@ function selectComparisonPerson(node) {
 
   updateComparisonNodeStyles();
   updateComparison();
+
+  // On phones, keep the graph unobstructed while choosing A, then open the
+  // drawer once the pair is complete so the comparison is immediately visible.
+  if (comparisonAIndex !== null && comparisonBIndex !== null && isMobileSidebarLayout()) {
+    setSidebarOpen(true);
+  }
 }
 
 function updateComparison() {
@@ -1380,7 +1392,7 @@ function updateComparison() {
   }
 
   let winners = comparisonWinners(a, b);
-  message.textContent = "Green markers indicate the closer person or the person with the higher letter count. Ties and correspondence balance are left unmarked.";
+  message.textContent = "Green markers indicate the closer person or the person with the higher letter count. Ties are left unmarked.";
   message.hidden = false;
   results.hidden = false;
   results.appendChild(buildComparisonCard(a, "Person A", winners.a));
@@ -1439,6 +1451,16 @@ function bindControls() {
   document.getElementById("CloseButton").addEventListener("click", returnToNetworkView);
   document.getElementById("BackToNetworkButton").addEventListener("click", returnToNetworkView);
 
+  document.getElementById("SidebarOpenButton").addEventListener("click", function() {
+    setSidebarOpen(true);
+  });
+  document.getElementById("SidebarCloseButton").addEventListener("click", function() {
+    setSidebarOpen(false);
+  });
+  document.getElementById("SidebarBackdrop").addEventListener("click", function() {
+    setSidebarOpen(false);
+  });
+
   document.getElementById("resetFiltersButton").addEventListener("click", resetFilters);
 
   document.getElementById("letterRangeFilter").addEventListener("change", function(event) {
@@ -1447,11 +1469,6 @@ function bindControls() {
     applyFilters();
   });
 
-  document.getElementById("correspondenceBalanceFilter").addEventListener("change", function(event) {
-    activeCorrespondenceBalance = event.target.value;
-    refreshResearchFilterOptions();
-    applyFilters();
-  });
 
   document.getElementById("ExploreModeButton").addEventListener("click", function() {
     setNetworkMode("explore");
@@ -1467,20 +1484,30 @@ function bindControls() {
       searchResults.hidden = true;
     }
   });
+
+  document.addEventListener("keydown", function(event) {
+    if (event.key === "Escape" && isMobileSidebarLayout()) {
+      setSidebarOpen(false);
+    }
+  });
+
+  // Start with the network unobstructed on phones, but keep the research tools
+  // visible by default on larger screens.
+  setSidebarOpen(!isMobileSidebarLayout());
 }
 
 function resetFilters() {
   enabledRelationships = new Set(relationshipValues);
   enabledGenders = new Set(genderValues);
   activeLetterRange = "all";
-  activeCorrespondenceBalance = "all";
 
-  document.querySelectorAll("#combinedFilters input[type='checkbox']").forEach(function(input) {
-    input.checked = true;
+  document.querySelectorAll("#combinedFilters .FilterSegment").forEach(function(button) {
+    let active = button.dataset.filterValue === "all";
+    button.classList.toggle("Active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
   });
 
   document.getElementById("letterRangeFilter").value = "all";
-  document.getElementById("correspondenceBalanceFilter").value = "all";
   refreshResearchFilterOptions();
   applyFilters();
 }

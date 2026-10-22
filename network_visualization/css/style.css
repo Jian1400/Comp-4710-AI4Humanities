@@ -2387,52 +2387,64 @@ body {
   color: #fffaf0;
 }
 
-.FilterPills {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr;
-  gap: 7px !important;
-  margin: 9px 0 13px !important;
+.FilterSelectors {
+  display: grid;
+  gap: 11px;
+  margin: 9px 0 13px;
 }
 
-.FilterPills .RelationshipPill {
-  width: auto !important;
-  min-width: 0;
-  flex-direction: row;
-  justify-content: flex-start;
-  padding: 7px 8px;
+.FilterSelectorGroup {
+  display: grid;
+  gap: 5px;
+}
+
+.FilterSelectorLabel {
+  color: #6f5e4e;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.FilterSegmentedControl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgba(117, 91, 64, 0.38);
   border-radius: 4px;
+  background: rgba(250, 244, 233, 0.54);
 }
 
-.FilterPills .RelationshipPill.FilterFamily { background: rgba(138, 82, 96, 0.11); border-color: rgba(138, 82, 96, 0.42); }
-.FilterPills .RelationshipPill.FilterFriend { background: rgba(95, 127, 105, 0.12); border-color: rgba(95, 127, 105, 0.42); }
-.FilterPills .RelationshipPill.FilterFemale { background: rgba(196, 111, 149, 0.11); border-color: rgba(196, 111, 149, 0.42); }
-.FilterPills .RelationshipPill.FilterMale { background: rgba(95, 135, 184, 0.11); border-color: rgba(95, 135, 184, 0.42); }
-
-.FilterPills .RelationshipPill:has(input:not(:checked)) {
-  opacity: 0.48;
+.FilterSegment {
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 5px;
+  border: 0;
+  border-right: 1px solid rgba(117, 91, 64, 0.28);
   background: transparent;
+  color: #69594b;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, box-shadow 120ms ease;
 }
 
-.FilterCheck {
-  width: 13px;
-  height: 13px;
-  flex: 0 0 13px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  border: 1px solid rgba(75, 58, 43, 0.55);
-  border-radius: 2px;
-  background: rgba(255, 252, 245, 0.68);
-  color: #4a1720;
-  font-family: Arial, sans-serif;
-  font-size: 10px;
-  font-weight: 800;
-  line-height: 1;
+.FilterSegment:last-child { border-right: 0; }
+.FilterSegment:hover { background: rgba(234, 219, 196, 0.52); }
+
+.FilterSegment.Active {
+  color: #352b23;
+  box-shadow: inset 0 -2px 0 rgba(74, 23, 32, 0.34);
 }
 
-.RelationshipPill input:checked + .FilterCheck::after { content: "✓"; }
-.RelationshipPill input:not(:checked) + .FilterCheck::after { content: ""; }
+.FilterSegment.Active:not(.FilterFamily):not(.FilterFriend):not(.FilterFemale):not(.FilterMale) {
+  background: #eadcc6;
+}
+
+.FilterSegment.FilterFamily.Active { background: rgba(138, 82, 96, 0.20); color: #623846; }
+.FilterSegment.FilterFriend.Active { background: rgba(95, 127, 105, 0.22); color: #405b49; }
+.FilterSegment.FilterFemale.Active { background: rgba(196, 111, 149, 0.21); color: #7f425d; }
+.FilterSegment.FilterMale.Active { background: rgba(95, 135, 184, 0.22); color: #3f6089; }
 
 .ResearchFilterLabel,
 .CompareSelectLabel {
@@ -2649,4 +2661,363 @@ body {
   border-radius: 50%;
   background: #5f8759;
   box-shadow: 0 0 0 2px rgba(95, 135, 89, 0.13);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive collapsible sidebar
+   -------------------------------------------------------------------------- */
+
+:root {
+  --sidebar-width: clamp(280px, 27vw, 370px);
+  --drawer-paper: rgba(247, 239, 225, 0.985);
+}
+
+.Workspace {
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) !important;
+  transition: grid-template-columns 220ms ease;
+}
+
+.Workspace.SidebarCollapsed {
+  grid-template-columns: 0 minmax(0, 1fr) !important;
+}
+
+.SidebarColumn {
+  width: 100%;
+  min-width: 0;
+  transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.Workspace.SidebarCollapsed .SidebarColumn {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.SidebarDrawerHeader {
+  position: sticky;
+  top: -16px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -16px -16px 8px;
+  padding: 10px 12px 8px 16px;
+  border-bottom: 1px solid rgba(154, 116, 61, 0.22);
+  background: var(--drawer-paper);
+}
+
+.SidebarDrawerTitle {
+  color: #7f5f34;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.SidebarDrawerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(117, 91, 64, 0.42);
+  border-radius: 4px;
+  background: rgba(247, 239, 225, 0.96);
+  color: #5d402b;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(58, 43, 29, 0.10);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.SidebarDrawerButton:hover,
+.SidebarDrawerButton:focus-visible {
+  background: #eadbc4;
+  border-color: rgba(107, 36, 48, 0.48);
+  outline: none;
+}
+
+.SidebarCloseButton {
+  flex: 0 0 auto;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.SidebarOpenButton {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 22;
+  gap: 7px;
+  padding: 0 10px;
+  min-width: auto;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+}
+
+.Workspace.SidebarCollapsed .SidebarOpenButton {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.SidebarOpenIcon { font-size: 15px; }
+.SidebarOpenText { font-size: 13px; }
+
+.SidebarBackdrop {
+  display: none;
+}
+
+/* Keep controls comfortable on touch screens. */
+.FilterSegment,
+.NetworkModeTab,
+.ComparisonClearButton,
+.SearchClear,
+.LetterTab,
+.ResearchFilterSelect,
+.LetterFilterSelect,
+.BackToNetworkButton {
+  touch-action: manipulation;
+}
+
+@media (max-width: 900px) {
+  :root { --sidebar-width: clamp(265px, 35vw, 330px); }
+
+  .SidebarColumn {
+    padding: 13px 13px 20px;
+  }
+
+  .SidebarDrawerHeader {
+    top: -13px;
+    margin: -13px -13px 8px;
+    padding-left: 13px;
+  }
+
+  .PersonViewHeading {
+    margin-left: -13px;
+    margin-right: -13px;
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+}
+
+/* Mobile: sidebar becomes an off-canvas drawer; graph remains full width. */
+@media (max-width: 760px) {
+  html,
+  body,
+  .BaselineApp,
+  .Workspace {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+  }
+
+  .Workspace,
+  .Workspace.SidebarCollapsed {
+    display: block !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .GraphColumn {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .SidebarColumn {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: min(88vw, 360px);
+    max-width: 100%;
+    height: 100%;
+    padding: 12px 14px calc(24px + env(safe-area-inset-bottom));
+    background: linear-gradient(rgba(247, 239, 225, 0.995), rgba(244, 234, 216, 0.995));
+    transform: translateX(0);
+    opacity: 1;
+    box-shadow: 10px 0 28px rgba(48, 35, 24, 0.20);
+  }
+
+  .Workspace.SidebarCollapsed .SidebarColumn {
+    transform: translateX(-102%);
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .SidebarDrawerHeader {
+    top: -12px;
+    margin: -12px -14px 8px;
+    padding: calc(9px + env(safe-area-inset-top)) 10px 8px 14px;
+  }
+
+  .SidebarBackdrop {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 35;
+    border: 0;
+    padding: 0;
+    background: rgba(39, 29, 21, 0.30);
+    opacity: 1;
+    transition: opacity 180ms ease;
+    cursor: default;
+  }
+
+  .Workspace.SidebarCollapsed .SidebarBackdrop {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .SidebarOpenButton {
+    top: calc(10px + env(safe-area-inset-top));
+    left: 10px;
+    min-height: 44px;
+    padding: 0 12px;
+    background: rgba(247, 239, 225, 0.96);
+  }
+
+  .SidebarCloseButton {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .SidebarSection {
+    padding: 10px 0;
+  }
+
+  .NetworkModeTab,
+  .FilterSegment,
+  .ComparisonClearButton,
+  .ResearchFilterSelect,
+  .LetterFilterSelect,
+  .LetterTab,
+  .SearchClear {
+    min-height: 44px;
+  }
+
+  .SearchWrap {
+    grid-template-columns: minmax(0, 1fr) 44px;
+  }
+
+  .SearchWrap input,
+  .LetterSearch {
+    min-height: 44px;
+    font-size: 16px; /* prevents iOS zoom-on-focus */
+  }
+
+  .FilterSegmentedControl {
+    gap: 0;
+  }
+
+  .FilterSegment {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+
+  .ResearchFilterLabel,
+  .CompareSelectLabel,
+  .NetworkGuideText,
+  .ComparisonMessage {
+    font-size: 11px;
+  }
+
+  .ComparisonResults {
+    grid-template-columns: 1fr;
+  }
+
+  .ComparisonCard h3 {
+    font-size: 18px;
+  }
+
+  .ComparisonMetric,
+  .ComparisonMetric strong {
+    font-size: 10.5px;
+  }
+
+  .ComparisonSlotValue {
+    font-size: 10.5px;
+  }
+
+  #BiographyName {
+    font-size: 24px;
+  }
+
+  #BiographySummary {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  #BiographyPhoto {
+    width: 104px;
+    height: 104px;
+  }
+
+  .PersonViewHeading {
+    top: -12px;
+    margin: -12px -14px 12px;
+    padding: calc(10px + env(safe-area-inset-top)) 14px 8px;
+  }
+
+  .BackToNetworkButton {
+    min-height: 40px;
+    font-size: 15px;
+  }
+
+  .LetterTabs {
+    gap: 4px;
+  }
+
+  .LetterTab {
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 10px;
+  }
+
+  .GraphStatus {
+    left: 10px;
+    right: 10px;
+    bottom: calc(8px + env(safe-area-inset-bottom));
+    width: fit-content;
+    max-width: calc(100% - 20px);
+  }
+
+  /* Hover does not exist reliably on touch devices; selected bubbles stay clear. */
+  @media (hover: none) {
+    .RelationshipNode.NodeHover {
+      transform: none !important;
+    }
+  }
+}
+
+@media (max-width: 430px) {
+  .SidebarColumn {
+    width: min(94vw, 360px);
+  }
+
+  .NetworkGuideSection {
+    display: none;
+  }
+
+  .NetworkModeTabs {
+    gap: 5px;
+  }
+
+  .NetworkModeTab {
+    font-size: 12px;
+  }
+
+  .FilterSelectorGroup {
+    gap: 5px;
+  }
+
+  .LetterTabs {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
 }

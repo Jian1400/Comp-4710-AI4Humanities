@@ -11,14 +11,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=research" />
+  <link rel="stylesheet" href="css/style.css?v=responsive-mobile" />
 </head>
 
 <body>
   <div class="Application BaselineApp">
     <main class="Workspace" id="Workspace">
 
-      <aside class="SidebarColumn" aria-label="Explore, filters, and selected person">
+      <aside class="SidebarColumn" id="SidebarColumn" aria-label="Explore, filters, and selected person" aria-hidden="false">
+        <div class="SidebarDrawerHeader">
+          <span class="SidebarDrawerTitle">Network tools</span>
+          <button id="SidebarCloseButton" class="SidebarDrawerButton SidebarCloseButton" type="button" aria-label="Close sidebar">×</button>
+        </div>
         <div id="ExplorePanel" class="SidebarView SidebarExploreView">
           <div class="NetworkModeTabs" role="tablist" aria-label="Network tools">
             <button id="ExploreModeButton" class="NetworkModeTab Active" type="button">Explore</button>
@@ -40,24 +44,15 @@
                 <div class="SectionLabel">Filters</div>
                 <button id="resetFiltersButton" type="button" class="SectionAction">Reset</button>
               </div>
-              <div id="combinedFilters" class="RelationshipPills FilterPills"></div>
+              <div id="combinedFilters" class="FilterSelectors"></div>
 
               <label class="ResearchFilterLabel" for="letterRangeFilter">Related letters</label>
               <select id="letterRangeFilter" class="ResearchFilterSelect" aria-label="Related letter count range"></select>
-
-              <label class="ResearchFilterLabel" for="correspondenceBalanceFilter">Correspondence balance</label>
-              <select id="correspondenceBalanceFilter" class="ResearchFilterSelect" aria-label="Correspondence balance">
-                <option value="all">All correspondence patterns</option>
-                <option value="to">To-dominant</option>
-                <option value="balanced">Balanced</option>
-                <option value="from">From-dominant</option>
-              </select>
-              <div class="ResearchFilterHint">Balance uses only To/From letters. “Balanced” means neither direction is more than 60% of the exchange.</div>
             </section>
 
             <section class="SidebarSection NetworkGuideSection">
               <div class="SectionLabel">About this view</div>
-              <p class="NetworkGuideText">People are positioned around George Eliot using the Archive’s predefined closeness values. Filters let you compare those curated relationships with gender, related-letter volume, and the balance of To/From correspondence. Select a portrait to view its biography and linked letters.</p>
+              <p class="NetworkGuideText">People are positioned around George Eliot using the Archive’s predefined closeness values. Filters let you compare those curated relationships with gender and related-letter volume. Select a portrait to view its biography and linked letters.</p>
             </section>
           </div>
 
@@ -114,8 +109,13 @@
         </section>
       </aside>
 
+      <button id="SidebarBackdrop" class="SidebarBackdrop" type="button" aria-label="Close sidebar" tabindex="-1"></button>
+
       <section class="GraphColumn" aria-label="George Eliot relationship network">
         <div class="GraphFrame">
+          <button id="SidebarOpenButton" class="SidebarDrawerButton SidebarOpenButton" type="button" aria-label="Open filters and network tools" aria-expanded="true">
+            <span class="SidebarOpenIcon">☰</span><span class="SidebarOpenText">Tools</span>
+          </button>
           <div id="relationshipWeb"></div>
           <div class="GraphStatus" id="NetworkStatus">Loading network…</div>
         </div>
@@ -124,7 +124,7 @@
     </main>
   </div>
 
-  <script src="js/relationshipsUtils.js?v=research"></script>
-  <script src="js/relationship.js?v=research"></script>
+  <script src="js/relationshipsUtils.js?v=responsive-mobile"></script>
+  <script src="js/relationship.js?v=responsive-mobile"></script>
 </body>
 </html>
