@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>George Eliot Correspondence Matrix</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=1" />
+</head>
+<body>
+  <div class="Application MatrixApp">
+    <button id="openSidebarButton" class="SidebarDrawerButton FloatingSidebarButton" type="button" aria-label="Open controls" aria-expanded="true">☰ Tools</button>
+    <div id="sidebarBackdrop" class="SidebarBackdrop" hidden></div>
+
+    <aside id="sidebar" class="SidebarColumn" aria-label="Timeline controls and selected person">
+      <div class="SidebarDrawerHeader">
+        <span class="SidebarDrawerTitle">Controls</span>
+        <button id="closeSidebarButton" class="SidebarDrawerButton SidebarCloseButton" type="button" aria-label="Close controls">×</button>
+      </div>
+
+      <div id="ExplorePanel" class="SidebarView">
+        <section class="SidebarSection">
+          <div class="SectionLabel">Explore</div>
+          <div class="SearchWrap">
+            <input id="searchBar" placeholder="Search people…" type="search" autocomplete="off" />
+            <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
+          </div>
+          <div id="searchResults" class="SearchResults" hidden></div>
+        </section>
+
+        <section class="SidebarSection CompactFilterSection">
+          <div class="SectionHeader">
+            <div class="SectionLabel">Filters</div>
+            <button id="resetFiltersButton" type="button" class="SectionAction">Reset</button>
+          </div>
+          <div class="FilterSelectors">
+            <div class="FilterSelectorGroup">
+              <div class="FilterSelectorLabel">Relationship</div>
+              <div id="relationshipFilters" class="FilterSegmentedControl" role="group" aria-label="Relationship filter"></div>
+            </div>
+            <div class="FilterSelectorGroup">
+              <div class="FilterSelectorLabel">Gender</div>
+              <div id="genderFilters" class="FilterSegmentedControl" role="group" aria-label="Gender filter"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="SidebarSection">
+          <div class="SectionLabel">Rows</div>
+          <label class="ControlLabel" for="sortRowsSelect">Sort people by</label>
+          <select id="sortRowsSelect" class="ControlSelect">
+            <option value="alpha">Name</option>
+            <option value="range-desc">Most letters in current range</option>
+            <option value="range-asc">Least letters in current range</option>
+            <option value="first">First correspondence</option>
+            <option value="recent">Most recent correspondence</option>
+          </select>
+          <label class="CheckRow">
+            <input id="hideInactiveToggle" type="checkbox" />
+            <span>Hide people with no letters in visible range</span>
+          </label>
+        </section>
+
+        <section class="SidebarSection">
+          <div class="SectionLabel">Year window</div>
+          <div class="RangeReadout"><span id="RangeStartReadout">—</span><span>to</span><span id="RangeEndReadout">—</span></div>
+          <div class="RangeControl">
+            <label>Start <input id="rangeStartSlider" type="range" min="0" max="1" value="0" step="1" /></label>
+            <label>End <input id="rangeEndSlider" type="range" min="0" max="1" value="1" step="1" /></label>
+          </div>
+          <div class="RangeButtons RangeButtonsThree">
+            <button id="zoomInButton" type="button">Zoom in</button>
+            <button id="zoomOutButton" type="button">Zoom out</button>
+            <button id="resetRangeButton" type="button">Full timeline</button>
+          </div>
+        </section>
+
+        <section class="SidebarSection ExplanationSection">
+          <div class="SectionLabel">How to read it</div>
+          <p>Each bar shows the total unique To/From correspondence for that year among the people currently visible. A dot marks a person who exchanged correspondence that year; larger dots mean more letters. Click a year bar to drill into months. Click a dot or person name to inspect the underlying letters. Dates with a known year but no reliable month remain in Unknown rather than being guessed.</p>
+        </section>
+      </div>
+
+      <section id="PersonPanel" class="PersonDetailsSection SidebarView" hidden>
+        <button id="BackToMatrixButton" type="button" class="BackToNetworkButton">← Back to matrix</button>
+        <div id="Biography">
+          <div id="BiographyName"></div>
+          <div id="BirthAndDeath"></div>
+          <div id="BiographyRelationship"></div>
+          <div class="Photo"><img id="BiographyPhoto" alt="Selected person portrait" /></div>
+          <div class="DetailsSubhead">Biography</div>
+          <div id="BiographySummary"></div>
+          <div class="DetailsSubhead LettersSubhead">Related letters</div>
+          <div id="BiographyLetters"></div>
+          <button id="CloseButton" type="button" hidden>×</button>
+        </div>
+      </section>
+    </aside>
+
+    <main class="MatrixWorkspace">
+      <header class="MatrixHeaderText">
+        <button id="backToYearsButton" class="BackToYearsButton" type="button" hidden>← Back to years</button>
+        <div>
+          <div class="Eyebrow">Experimental timeline view</div>
+          <h1>Correspondence across people and years</h1>
+        </div>
+        <div id="MatrixSummary" class="MatrixSummary">Loading correspondence…</div>
+      </header>
+
+      <section class="ChartShell" aria-label="Correspondence matrix chart">
+        <div id="barHeader" class="BarHeader"></div>
+        <div id="matrixScroll" class="MatrixScroll">
+          <div id="matrixBody"></div>
+        </div>
+        <div id="matrixTooltip" class="MatrixTooltip" hidden></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="js/relationshipsUtils.js?v=1"></script>
+  <script src="js/relationship.js?v=1"></script>
+</body>
+</html>

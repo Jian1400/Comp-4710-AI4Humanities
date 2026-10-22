@@ -53,19 +53,16 @@ let enabledRelationships = new Set(relationshipValues);
 let genderValues = ["female", "male"];
 let enabledGenders = new Set(genderValues);
 
-let LETTER_RANGES = [
-  { value: "all", label: "All letter counts", min: 0, max: Infinity },
-  { value: "0", label: "0 letters", min: 0, max: 0 },
-  { value: "1-9", label: "1–9 letters", min: 1, max: 9 },
-  { value: "10-24", label: "10–24 letters", min: 10, max: 24 },
-  { value: "25-49", label: "25–49 letters", min: 25, max: 49 },
-  { value: "50-99", label: "50–99 letters", min: 50, max: 99 },
-  { value: "100-249", label: "100–249 letters", min: 100, max: 249 },
-  { value: "250-499", label: "250–499 letters", min: 250, max: 499 },
-  { value: "500-999", label: "500–999 letters", min: 500, max: 999 },
-  { value: "1000+", label: "1000+ letters", min: 1000, max: Infinity }
+let LETTER_MINIMUMS = [
+  { value: "all", label: "Any letter count", min: 0 },
+  { value: "1", label: "1+ letters", min: 1 },
+  { value: "10", label: "10+ letters", min: 10 },
+  { value: "50", label: "50+ letters", min: 50 },
+  { value: "100", label: "100+ letters", min: 100 },
+  { value: "250", label: "250+ letters", min: 250 },
+  { value: "500", label: "500+ letters", min: 500 }
 ];
-let activeLetterRange = "all";
+let activeLetterMinimum = "all";
 let networkNodeSelection = null;
 let networkLinkSelection = null;
 let nodeGroupSelection = null;
@@ -465,7 +462,7 @@ Promise.all([parseData, letterDataPromise]).then(function() {
   });
 
   buildCombinedFilters();
-  buildLetterRangeFilter();
+  buildLetterMinimumFilter();
   updateComparison();
   drawNetwork();
   bindControls();
@@ -1152,13 +1149,13 @@ function buildCombinedFilters() {
   ]);
 }
 
-function rangeForValue(value) {
-  return LETTER_RANGES.find(function(range) { return range.value === value; }) || LETTER_RANGES[0];
+function minimumForValue(value) {
+  return LETTER_MINIMUMS.find(function(option) { return option.value === value; }) || LETTER_MINIMUMS[0];
 }
 
-function statsPassLetterRange(stats, rangeValue) {
-  let range = rangeForValue(rangeValue);
-  return stats.total >= range.min && stats.total <= range.max;
+function statsPassLetterMinimum(stats, minimumValue) {
+  let option = minimumForValue(minimumValue);
+  return stats.total >= option.min;
 }
 
 function nodePassesBaseFilters(node) {
@@ -1173,40 +1170,40 @@ function nodePassesFilters(node) {
   if (!nodePassesBaseFilters(node)) return false;
 
   let stats = getLetterStatsForNode(node);
-  if (!statsPassLetterRange(stats, activeLetterRange)) return false;
+  if (!statsPassLetterMinimum(stats, activeLetterMinimum)) return false;
 
   return true;
 }
 
-function buildLetterRangeFilter() {
-  let select = document.getElementById("letterRangeFilter");
+function buildLetterMinimumFilter() {
+  let select = document.getElementById("letterMinimumFilter");
   if (!select) return;
   select.innerHTML = "";
 
-  LETTER_RANGES.forEach(function(range) {
+  LETTER_MINIMUMS.forEach(function(minimum) {
     let option = document.createElement("option");
-    option.value = range.value;
-    option.textContent = range.label;
+    option.value = minimum.value;
+    option.textContent = minimum.label;
     select.appendChild(option);
   });
 
-  select.value = activeLetterRange;
+  select.value = activeLetterMinimum;
 }
 
 function refreshResearchFilterOptions() {
-  let rangeSelect = document.getElementById("letterRangeFilter");
+  let minimumSelect = document.getElementById("letterMinimumFilter");
   let baseNodes = nodes.slice(1).filter(nodePassesBaseFilters);
 
-  if (rangeSelect) {
-    Array.from(rangeSelect.options).forEach(function(option) {
-      let range = rangeForValue(option.value);
+  if (minimumSelect) {
+    Array.from(minimumSelect.options).forEach(function(option) {
+      let minimum = minimumForValue(option.value);
       let count = baseNodes.filter(function(node) {
         let stats = getLetterStatsForNode(node);
-        return stats.total >= range.min && stats.total <= range.max;
+        return stats.total >= minimum.min;
       }).length;
-      option.textContent = range.label + " (" + count + ")";
+      option.textContent = minimum.label + " (" + count + ")";
     });
-    rangeSelect.value = activeLetterRange;
+    minimumSelect.value = activeLetterMinimum;
   }
 }
 
@@ -1463,8 +1460,8 @@ function bindControls() {
 
   document.getElementById("resetFiltersButton").addEventListener("click", resetFilters);
 
-  document.getElementById("letterRangeFilter").addEventListener("change", function(event) {
-    activeLetterRange = event.target.value;
+  document.getElementById("letterMinimumFilter").addEventListener("change", function(event) {
+    activeLetterMinimum = event.target.value;
     refreshResearchFilterOptions();
     applyFilters();
   });
@@ -1499,7 +1496,7 @@ function bindControls() {
 function resetFilters() {
   enabledRelationships = new Set(relationshipValues);
   enabledGenders = new Set(genderValues);
-  activeLetterRange = "all";
+  activeLetterMinimum = "all";
 
   document.querySelectorAll("#combinedFilters .FilterSegment").forEach(function(button) {
     let active = button.dataset.filterValue === "all";
@@ -1507,7 +1504,7 @@ function resetFilters() {
     button.setAttribute("aria-pressed", active ? "true" : "false");
   });
 
-  document.getElementById("letterRangeFilter").value = "all";
+  document.getElementById("letterMinimumFilter").value = "all";
   refreshResearchFilterOptions();
   applyFilters();
 }

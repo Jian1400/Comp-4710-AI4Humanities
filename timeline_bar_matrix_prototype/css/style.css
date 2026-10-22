@@ -1,0 +1,308 @@
+:root {
+  --paper: #efe5d2;
+  --paper-light: #f8f1e4;
+  --paper-deep: #e2d2b8;
+  --ink: #2c241c;
+  --muted: #756556;
+  --wine: #6b2430;
+  --wine-dark: #4a1720;
+  --brass: #9a743d;
+  --rule: #c7b493;
+  --friend: #5f7f69;
+  --family: #8a5260;
+  --female: #c46f95;
+  --male: #5f87b8;
+  --name-column: 190px;
+}
+
+* { box-sizing: border-box; }
+html, body { width: 100%; height: 100%; margin: 0; }
+body {
+  overflow: hidden;
+  color: var(--ink);
+  background:
+    repeating-linear-gradient(0deg, rgba(82,63,42,.012) 0, rgba(82,63,42,.012) 1px, transparent 1px, transparent 4px),
+    #eee4d2;
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.MatrixApp {
+  width: 100%;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: clamp(260px, 23vw, 330px) minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.SidebarColumn {
+  min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 16px 16px 28px;
+  border-right: 1px solid #a99070;
+  background: linear-gradient(rgba(247,239,225,.985), rgba(244,234,216,.985));
+  box-shadow: 5px 0 18px rgba(58,43,29,.08);
+  z-index: 30;
+  transition: transform 180ms ease;
+}
+.SidebarTopbar { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; margin-bottom: 12px; }
+.SidebarTitle { font: 700 23px/1 "Cormorant Garamond", Georgia, serif; color: var(--wine-dark); }
+.Eyebrow { color: var(--brass); text-transform: uppercase; letter-spacing: .12em; font: 700 9px/1.4 "Libre Baskerville", serif; }
+.SidebarClose { border: 1px solid #b9a384; background: #f7efe2; color: var(--wine); width: 34px; height: 34px; font-size: 20px; border-radius: 4px; }
+.FloatingSidebarButton { display: none; position: fixed; z-index: 40; top: 10px; left: 10px; border: 1px solid #a99070; background: rgba(247,239,225,.96); color: var(--wine-dark); padding: 8px 11px; border-radius: 5px; font-weight: 700; }
+.SidebarBackdrop { display: none; }
+
+.SidebarSection { padding: 12px 0; border-top: 1px solid rgba(154,116,61,.25); }
+.SectionLabel { margin-bottom: 8px; color: var(--brass); text-transform: uppercase; letter-spacing: .12em; font: 700 10px/1.2 "Libre Baskerville", serif; }
+.SearchWrap { display: grid; grid-template-columns: 1fr 36px; gap: 6px; }
+.SearchWrap input, .ControlSelect, .LetterSearch, .LetterFilterSelect {
+  width: 100%; min-width: 0; border: 1px solid #b9a384; background: #fbf5e9; color: var(--ink); border-radius: 4px; padding: 9px 10px; font-size: 11px;
+}
+.SearchClear { border: 1px solid #b9a384; background: #eadcc6; color: var(--wine); border-radius: 4px; font-size: 18px; }
+.SearchResults { margin-top: 5px; border: 1px solid #b9a384; background: #fbf5e9; border-radius: 4px; overflow: hidden; }
+.SearchResult { width: 100%; border: 0; border-bottom: 1px solid #e3d6c3; background: transparent; padding: 8px 9px; display: flex; justify-content: space-between; gap: 8px; text-align: left; }
+.SearchResult:hover { background: #f0e3d0; }
+.SearchResultName { font-weight: 700; font-size: 10px; }
+.SearchResultType { color: var(--muted); font-size: 9px; }
+.SearchEmpty { padding: 9px; color: var(--muted); font-size: 10px; }
+
+.SegmentedControl { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 4px; }
+.SegmentButton { min-width: 0; border: 1px solid #baa88c; background: #f9f2e7; color: #55483d; padding: 7px 4px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.SegmentButton.Active { color: #fffaf2; border-color: var(--wine); background: var(--wine); }
+.SegmentButton[data-value="family"].Active { background: var(--family); border-color: var(--family); }
+.SegmentButton[data-value="friend"].Active { background: var(--friend); border-color: var(--friend); }
+.SegmentButton[data-value="female"].Active { background: var(--female); border-color: var(--female); }
+.SegmentButton[data-value="male"].Active { background: var(--male); border-color: var(--male); }
+
+.ControlLabel { display: block; margin: 0 0 5px; color: var(--muted); font-size: 9px; }
+.CheckRow { margin-top: 9px; display: flex; align-items: flex-start; gap: 7px; color: #5f5348; font-size: 10px; line-height: 1.4; }
+.CheckRow input { margin-top: 2px; accent-color: var(--wine); }
+.RangeReadout { display: flex; justify-content: center; gap: 9px; align-items: baseline; margin-bottom: 7px; font: 700 19px/1 "Cormorant Garamond", serif; color: var(--wine); }
+.RangeControl { display: grid; gap: 6px; }
+.RangeControl label { display: grid; grid-template-columns: 35px 1fr; gap: 5px; align-items: center; color: var(--muted); font-size: 9px; }
+.RangeControl input { width: 100%; accent-color: var(--wine); }
+.RangeButtons { margin-top: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.RangeButtons button, .SecondaryButton { border: 1px solid #b9a384; background: #f7efe2; color: #55483d; border-radius: 4px; padding: 7px 5px; font-size: 9px; font-weight: 700; }
+.SecondaryButton { width: 100%; margin-top: 5px; }
+.ExplanationSection p { margin: 0; color: #65584b; font-size: 10px; line-height: 1.55; }
+
+.MatrixWorkspace { min-width: 0; height: 100vh; display: grid; grid-template-rows: auto minmax(0,1fr); padding: 14px 16px 16px; overflow: hidden; }
+.MatrixHeaderText { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; padding: 0 2px 10px; }
+.MatrixHeaderText h1 { margin: 2px 0 0; color: var(--wine-dark); font: 700 clamp(22px,2.3vw,34px)/1 "Cormorant Garamond", Georgia, serif; }
+.MatrixSummary { max-width: 420px; color: #665849; font-size: 10px; line-height: 1.45; text-align: right; }
+
+.ChartShell { position: relative; min-height: 0; overflow: hidden; border: 1px solid #bda889; background: rgba(249,243,232,.78); box-shadow: 4px 5px 0 rgba(93,69,45,.05); }
+.BarHeader { height: 160px; border-bottom: 1px solid #bda889; background: rgba(247,239,225,.96); }
+.BarHeader svg { display: block; width: 100%; height: 100%; }
+.MatrixScroll { height: calc(100% - 160px); overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #b39a79 transparent; }
+.MatrixScroll svg { display: block; width: 100%; }
+
+.YearBar { fill: rgba(107,36,48,.68); }
+.YearBar:hover, .YearBar.SelectedYear { fill: #6b2430; }
+.YearBarHit { fill: transparent; cursor: pointer; }
+.YearGridLine { stroke: rgba(130,104,74,.16); stroke-width: 1; }
+.YearGridLine.SelectedYear { stroke: rgba(107,36,48,.55); stroke-width: 1.6; }
+.YearLabel { fill: #594a3d; font-size: 10px; font-weight: 700; }
+.BarCountLabel { fill: #6b2430; font-size: 9px; font-weight: 700; }
+.AxisTitle { fill: #7b674f; font: italic 700 11px "Cormorant Garamond", serif; }
+
+.RowStripe { fill: rgba(154,116,61,.025); }
+.RowStripe.Alternate { fill: rgba(107,36,48,.025); }
+.RowLine { stroke: rgba(144,112,74,.14); stroke-width: 1; }
+.PersonName { fill: #4b3d32; font: 600 11px "Cormorant Garamond", Georgia, serif; cursor: pointer; }
+.PersonName:hover { fill: var(--wine); text-decoration: underline; }
+.PersonMeta { fill: #8a7662; font-size: 7.5px; pointer-events: none; }
+.ActivityDot { fill: #9a743d; stroke: #fff8ec; stroke-width: 1.4; cursor: pointer; }
+.ActivityDot.GenderFemale { fill: var(--female); }
+.ActivityDot.GenderMale { fill: var(--male); }
+.ActivityDot:hover { stroke: var(--wine-dark); stroke-width: 2.2; }
+.ActivityDot.SelectedDot { stroke: var(--wine-dark); stroke-width: 3; }
+.EmptyRangeMessage { color: var(--muted); padding: 24px; text-align: center; font-size: 12px; }
+
+.MatrixTooltip { position: fixed; z-index: 80; pointer-events: none; min-width: 145px; max-width: 250px; padding: 8px 9px; border: 1px solid #9e8667; border-radius: 4px; background: rgba(251,245,233,.98); box-shadow: 0 6px 18px rgba(48,36,25,.16); color: #44372d; font-size: 9px; line-height: 1.45; }
+.MatrixTooltip strong { display: block; color: var(--wine-dark); font: 700 14px "Cormorant Garamond", serif; }
+
+.PersonDetailsSection[hidden], .SidebarView[hidden] { display: none !important; }
+.BackToNetworkButton { margin-bottom: 10px; border: 0; background: transparent; color: var(--wine); padding: 3px 0; font-weight: 700; font-size: 11px; }
+#BiographyName { color: var(--wine-dark); font: 700 25px/1.05 "Cormorant Garamond", serif; }
+#BirthAndDeath { margin-top: 4px; color: var(--muted); font-size: 9px; }
+#BiographyRelationship { display: inline-block; margin-top: 8px; padding: 4px 7px; border: 1px solid #a88d69; font: 700 11px "Cormorant Garamond", serif; }
+.Photo { display: flex; justify-content: center; margin: 12px 0; }
+#BiographyPhoto { width: 96px; height: 96px; object-fit: cover; border-radius: 50%; border: 2px solid #a88d69; padding: 3px; background: #efe2cd; }
+.DetailsSubhead { margin: 13px 0 6px; padding-top: 10px; border-top: 1px solid rgba(154,116,61,.3); color: var(--wine); text-transform: uppercase; letter-spacing: .08em; font: 700 11px "Cormorant Garamond", serif; }
+#BiographySummary { color: #5f5145; font-size: 10px; line-height: 1.55; }
+.TimelineLettersYear { margin-bottom: 7px; color: var(--wine); font: 700 13px "Cormorant Garamond", serif; }
+.LetterTabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 8px; }
+.LetterTab { border: 1px solid #b9a384; background: #f8f0e4; color: #5d4d40; border-radius: 3px; padding: 5px 3px; font-size: 8px; }
+.LetterTab.Active { background: var(--wine); border-color: var(--wine); color: white; }
+.LetterFilterControls { display: grid; gap: 6px; margin-bottom: 7px; }
+.LetterFilterLabel { display: grid; gap: 3px; color: var(--muted); font-size: 8px; }
+.LetterList { display: grid; gap: 5px; }
+.LetterReferenceGroup { padding-top: 6px; border-top: 1px solid rgba(154,116,61,.25); }
+.LetterReferenceHeader { color: var(--wine); font: 700 12px "Cormorant Garamond", serif; }
+.LetterRow { padding: 6px 0; border-bottom: 1px solid rgba(154,116,61,.18); }
+.LetterRow a { color: var(--wine); font-size: 9px; line-height: 1.35; text-decoration: none; }
+.LetterRow a:hover { text-decoration: underline; }
+.LetterEmpty, .LetterTabSummary { color: var(--muted); font-size: 9px; line-height: 1.4; }
+#CloseButton { display: none !important; }
+
+@media (max-width: 760px) {
+  :root { --name-column: 118px; }
+  .MatrixApp { display: block; }
+  .MatrixWorkspace { width: 100%; padding: 8px; }
+  .MatrixHeaderText { padding-left: 52px; align-items: flex-start; }
+  .MatrixHeaderText h1 { font-size: 24px; }
+  .MatrixSummary { display: none; }
+  .SidebarColumn {
+    position: fixed; inset: 0 auto 0 0; width: min(88vw, 330px); height: 100%; transform: translateX(-105%); transition: transform 180ms ease; border-right: 1px solid #9f8768; z-index: 70;
+  }
+  body:not(.SidebarClosed) .SidebarColumn { transform: translateX(0); }
+  body.SidebarClosed .FloatingSidebarButton { display: inline-flex; }
+  body:not(.SidebarClosed) .FloatingSidebarButton { display: none; }
+  .SidebarBackdrop { position: fixed; inset: 0; z-index: 60; background: rgba(39,29,20,.32); }
+  body:not(.SidebarClosed) .SidebarBackdrop { display: block; }
+  .BarHeader { height: 135px; }
+  .MatrixScroll { height: calc(100% - 135px); }
+  .PersonName { font-size: 9px; }
+  .PersonMeta { display: none; }
+  .YearLabel { font-size: 8px; }
+  .SearchWrap input, .ControlSelect, .LetterSearch, .LetterFilterSelect { font-size: 16px; }
+  button, .SegmentButton { min-height: 42px; }
+}
+
+/* Network-visualization consistency pass */
+.SectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.SectionAction {
+  border: 0;
+  background: transparent;
+  color: var(--wine);
+  padding: 2px 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.SidebarDrawerHeader {
+  position: sticky;
+  top: -16px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -16px -16px 8px;
+  padding: 10px 12px 8px 16px;
+  border-bottom: 1px solid rgba(154,116,61,.22);
+  background: rgba(247,239,225,.995);
+}
+.SidebarDrawerTitle {
+  color: #7f5f34;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.SidebarDrawerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 38px;
+  border: 1px solid rgba(117,91,64,.42);
+  border-radius: 4px;
+  background: rgba(247,239,225,.96);
+  color: #5d402b;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(58,43,29,.10);
+}
+.FilterSelectors { display: grid; gap: 11px; margin: 9px 0 3px; }
+.FilterSelectorGroup { display: grid; gap: 5px; }
+.FilterSelectorLabel {
+  color: #6f5e4e;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9px;
+  font-weight: 700;
+}
+.FilterSegmentedControl {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  overflow: hidden;
+  border: 1px solid rgba(117,91,64,.38);
+  border-radius: 4px;
+  background: rgba(250,244,233,.54);
+}
+.FilterSegment {
+  min-width: 0;
+  min-height: 32px;
+  padding: 6px 5px;
+  border: 0;
+  border-right: 1px solid rgba(117,91,64,.28);
+  background: transparent;
+  color: #69594b;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 120ms ease,color 120ms ease,box-shadow 120ms ease;
+}
+.FilterSegment:last-child { border-right: 0; }
+.FilterSegment:hover { background: rgba(234,219,196,.52); }
+.FilterSegment.Active { color: #352b23; box-shadow: inset 0 -2px 0 rgba(74,23,32,.34); }
+.FilterSegment.Active:not(.FilterFamily):not(.FilterFriend):not(.FilterFemale):not(.FilterMale) { background: #eadcc6; }
+.FilterSegment.FilterFamily.Active { background: rgba(138,82,96,.20); color: #623846; }
+.FilterSegment.FilterFriend.Active { background: rgba(95,127,105,.22); color: #405b49; }
+.FilterSegment.FilterFemale.Active { background: rgba(196,111,149,.21); color: #7f425d; }
+.FilterSegment.FilterMale.Active { background: rgba(95,135,184,.22); color: #3f6089; }
+.BackToYearsButton {
+  flex: 0 0 auto;
+  border: 1px solid rgba(117,91,64,.38);
+  border-radius: 4px;
+  background: #f7efe2;
+  color: var(--wine);
+  padding: 7px 9px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: 12px;
+  font-weight: 700;
+}
+.BackToYearsButton[hidden] { display: none !important; }
+
+@media (max-width: 760px) {
+  .SidebarDrawerHeader { top: -12px; margin: -12px -14px 8px; padding: 9px 10px 8px 14px; }
+  .SidebarDrawerButton, .FilterSegment, .SectionAction { min-height: 44px; }
+  .FilterSegment { padding: 8px 4px; font-size: 13px; }
+  .BackToYearsButton { min-height: 42px; }
+}
+
+
+/* v3 drawer behavior: one Tools button, functional on desktop and mobile. */
+.MatrixApp { transition: grid-template-columns 180ms ease; }
+body.SidebarClosed .MatrixApp { grid-template-columns: 0 minmax(0, 1fr); }
+body.SidebarClosed .SidebarColumn { transform: translateX(-105%); }
+body.SidebarClosed .FloatingSidebarButton { display: inline-flex; }
+body:not(.SidebarClosed) .FloatingSidebarButton { display: none; }
+.RangeButtonsThree { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.AxisHint { fill: #8a7662; font: 9px "Libre Baskerville", Georgia, serif; }
+.YearBarGroup:hover .YearBar { fill: #6b2430; }
+.YearBarGroup { cursor: pointer; }
+
+@media (max-width: 760px) {
+  .MatrixApp,
+  body.SidebarClosed .MatrixApp { display: block; }
+  .SidebarColumn { transform: translateX(0); }
+  body.SidebarClosed .SidebarColumn { transform: translateX(-105%); }
+  body.SidebarClosed .FloatingSidebarButton { display: inline-flex; }
+  body:not(.SidebarClosed) .FloatingSidebarButton { display: none; }
+  body:not(.SidebarClosed) .SidebarBackdrop { display: block; }
+  .RangeButtonsThree { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
