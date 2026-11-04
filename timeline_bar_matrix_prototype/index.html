@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=1" />
+  <link rel="stylesheet" href="css/style.css?v=8" />
 </head>
 <body>
   <div class="Application MatrixApp">
@@ -29,6 +29,10 @@
             <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
           </div>
           <div id="searchResults" class="SearchResults" hidden></div>
+          <label class="PeopleBrowseLabel" for="peopleBrowseSelect">Browse all people</label>
+          <select id="peopleBrowseSelect" class="PeopleBrowseSelect" aria-label="Browse all people">
+            <option value="">Select a person…</option>
+          </select>
         </section>
 
         <section class="SidebarSection CompactFilterSection">
@@ -52,9 +56,8 @@
           <div class="SectionLabel">Rows</div>
           <label class="ControlLabel" for="sortRowsSelect">Sort people by</label>
           <select id="sortRowsSelect" class="ControlSelect">
+            <option value="range-desc" selected>Most letters in current range</option>
             <option value="alpha">Name</option>
-            <option value="range-desc">Most letters in current range</option>
-            <option value="range-asc">Least letters in current range</option>
             <option value="first">First correspondence</option>
             <option value="recent">Most recent correspondence</option>
           </select>
@@ -64,23 +67,9 @@
           </label>
         </section>
 
-        <section class="SidebarSection">
-          <div class="SectionLabel">Year window</div>
-          <div class="RangeReadout"><span id="RangeStartReadout">—</span><span>to</span><span id="RangeEndReadout">—</span></div>
-          <div class="RangeControl">
-            <label>Start <input id="rangeStartSlider" type="range" min="0" max="1" value="0" step="1" /></label>
-            <label>End <input id="rangeEndSlider" type="range" min="0" max="1" value="1" step="1" /></label>
-          </div>
-          <div class="RangeButtons RangeButtonsThree">
-            <button id="zoomInButton" type="button">Zoom in</button>
-            <button id="zoomOutButton" type="button">Zoom out</button>
-            <button id="resetRangeButton" type="button">Full timeline</button>
-          </div>
-        </section>
-
         <section class="SidebarSection ExplanationSection">
           <div class="SectionLabel">How to read it</div>
-          <p>Each bar shows the total unique To/From correspondence for that year among the people currently visible. A dot marks a person who exchanged correspondence that year; larger dots mean more letters. Click a year bar to drill into months. Click a dot or person name to inspect the underlying letters. Dates with a known year but no reliable month remain in Unknown rather than being guessed.</p>
+          <p>Each bar shows the total unique To/From correspondence for that year among the people currently visible. A dot marks a person who exchanged correspondence that year; larger dots mean more letters. Click a year bar to drill into months. Click a dot or person name to inspect the underlying letters. Dates with a known year but no reliable month remain in UNK rather than being guessed.</p>
         </section>
       </div>
 
@@ -117,10 +106,28 @@
         </div>
         <div id="matrixTooltip" class="MatrixTooltip" hidden></div>
       </section>
+
+      <section class="TimelineRangeDock" aria-label="Visible year range">
+        <div class="RangeDockCompact">
+          <div class="RangeMiniButtons" aria-label="Timeline range controls">
+            <button id="zoomOutButton" type="button" title="Zoom out" aria-label="Zoom out">−</button>
+            <button id="zoomInButton" type="button" title="Zoom in" aria-label="Zoom in">+</button>
+            <button id="resetRangeButton" type="button" title="Show full timeline">Full</button>
+          </div>
+          <div class="DualRange" id="dualRangeControl">
+            <span id="rangeStartBubble" class="RangeHandleLabel RangeHandleLabelStart">—</span>
+            <span id="rangeEndBubble" class="RangeHandleLabel RangeHandleLabelEnd">—</span>
+            <div class="DualRangeTrack"></div>
+            <div id="rangeTrackFill" class="DualRangeFill"></div>
+            <input id="rangeStartSlider" class="DualRangeInput DualRangeStart" type="range" min="0" max="1" value="0" step="1" aria-label="Start year" />
+            <input id="rangeEndSlider" class="DualRangeInput DualRangeEnd" type="range" min="0" max="1" value="1" step="1" aria-label="End year" />
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
-  <script src="js/relationshipsUtils.js?v=1"></script>
-  <script src="js/relationship.js?v=1"></script>
+  <script src="js/relationshipsUtils.js?v=8"></script>
+  <script src="js/relationship.js?v=8"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 //   ../Datasets/UpdatedGeorgeEliotGallery.csv
 //
 // This file drives people, biography, image, gender, relationship,
-// closeness, and To / From / About letter links.
+// closeness, and To / From letter links. About references remain in the CSV but are intentionally excluded from this visualization.
 // -----------------------------------------------------------------------------
 
 let svg = d3
@@ -166,8 +166,12 @@ function parseUpdatedRelation(personName, relationHtml) {
 
     if (tag === "strong") {
       let heading = element.textContent.trim().replace(/:$/, "");
-      if (heading === "To" || heading === "From" || heading === "About") {
+      if (heading === "To" || heading === "From") {
         relationType = heading;
+      } else {
+        // Keep About references in the source dataset, but do not ingest them
+        // into either visualization until the Archive data is complete.
+        relationType = "";
       }
       return;
     }
@@ -259,12 +263,11 @@ let letterDataPromise = d3.csv("../Datasets/UpdatedGeorgeEliotGallery.csv")
 
 function getLetterStatsForNode(data) {
   let letters = getLettersForNode(data);
-  let stats = { total: letters.length, to: 0, from: 0, about: 0 };
+  let stats = { total: letters.length, to: 0, from: 0 };
 
   letters.forEach(function(letter) {
     if (letter.relationType === "To") stats.to += 1;
     if (letter.relationType === "From") stats.from += 1;
-    if (letter.relationType === "About") stats.about += 1;
   });
 
 
@@ -463,6 +466,7 @@ Promise.all([parseData, letterDataPromise]).then(function() {
 
   buildCombinedFilters();
   buildLetterMinimumFilter();
+  buildPeopleBrowseSelect();
   updateComparison();
   drawNetwork();
   bindControls();
@@ -954,6 +958,25 @@ function selectPerson(data, shouldFocus) {
 // -----------------------------------------------------------------------------
 
 
+function buildPeopleBrowseSelect() {
+  let select = document.getElementById("peopleBrowseSelect");
+  if (!select) return;
+
+  select.innerHTML = "";
+
+  let placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select a person…";
+  select.appendChild(placeholder);
+
+  people.forEach(function(person) {
+    let option = document.createElement("option");
+    option.value = String(person.data.index);
+    option.textContent = person.name;
+    select.appendChild(option);
+  });
+}
+
 function renderPeopleSearch() {
   let input = document.getElementById("searchBar");
   let results = document.getElementById("searchResults");
@@ -1005,6 +1028,8 @@ function renderPeopleSearch() {
     button.addEventListener("click", function() {
       input.value = person.name;
       results.hidden = true;
+      let browseSelect = document.getElementById("peopleBrowseSelect");
+      if (browseSelect) browseSelect.value = String(person.data.index);
       selectPerson(person.data, true);
     });
 
@@ -1037,6 +1062,8 @@ function findPerson() {
     return;
   }
 
+  let browseSelect = document.getElementById("peopleBrowseSelect");
+  if (browseSelect) browseSelect.value = String(match.data.index);
   selectPerson(match.data, true);
 }
 
@@ -1254,7 +1281,7 @@ function comparisonMetric(label, value, winner) {
 function buildComparisonCard(node, title, winners) {
   let stats = getLetterStatsForNode(node);
   let card = document.createElement("article");
-  card.className = "ComparisonCard";
+  card.className = "ComparisonCard " + (title === "Person A" ? "ComparisonCardA" : "ComparisonCardB");
 
   let tag = document.createElement("div");
   tag.className = "ComparisonCardTag";
@@ -1268,10 +1295,9 @@ function buildComparisonCard(node, title, winners) {
   let bucket = capitalizeWords(closenessBucket(node));
   card.appendChild(comparisonMetric("Relationship", capitalizeWords(node.Relationship), false));
   card.appendChild(comparisonMetric("Closeness", bucket + " (" + node.RawCloseness + ")", winners.closeness));
-  card.appendChild(comparisonMetric("All letters", stats.total, winners.total));
+  card.appendChild(comparisonMetric("To/From letters", stats.total, winners.total));
   card.appendChild(comparisonMetric("To", stats.to, winners.to));
   card.appendChild(comparisonMetric("From", stats.from, winners.from));
-  card.appendChild(comparisonMetric("About", stats.about, winners.about));
 
   return card;
 }
@@ -1298,15 +1324,13 @@ function comparisonWinners(a, b) {
       closeness: closeness.a,
       total: higher(aStats.total, bStats.total).a,
       to: higher(aStats.to, bStats.to).a,
-      from: higher(aStats.from, bStats.from).a,
-      about: higher(aStats.about, bStats.about).a
+      from: higher(aStats.from, bStats.from).a
     },
     b: {
       closeness: closeness.b,
       total: higher(aStats.total, bStats.total).b,
       to: higher(aStats.to, bStats.to).b,
-      from: higher(aStats.from, bStats.from).b,
-      about: higher(aStats.about, bStats.about).b
+      from: higher(aStats.from, bStats.from).b
     }
   };
 }
@@ -1389,7 +1413,7 @@ function updateComparison() {
   }
 
   let winners = comparisonWinners(a, b);
-  message.textContent = "Green markers indicate the closer person or the person with the higher letter count. Ties are left unmarked.";
+  message.textContent = "Green markers indicate the closer person or the person with the higher To/From letter count. Ties are left unmarked.";
   message.hidden = false;
   results.hidden = false;
   results.appendChild(buildComparisonCard(a, "Person A", winners.a));
@@ -1428,8 +1452,25 @@ function setNetworkMode(mode) {
 function bindControls() {
   let searchBar = document.getElementById("searchBar");
   let searchResults = document.getElementById("searchResults");
+  let peopleBrowseSelect = document.getElementById("peopleBrowseSelect");
 
   searchBar.addEventListener("input", renderPeopleSearch);
+
+  if (peopleBrowseSelect) {
+    peopleBrowseSelect.addEventListener("change", function() {
+      let selectedIndex = Number(peopleBrowseSelect.value);
+      if (!Number.isFinite(selectedIndex) || selectedIndex <= 0) return;
+
+      let person = people.find(function(item) {
+        return item.data.index === selectedIndex;
+      });
+
+      if (!person) return;
+      searchBar.value = person.name;
+      searchResults.hidden = true;
+      selectPerson(person.data, true);
+    });
+  }
   searchBar.addEventListener("keydown", function(event) {
     if (event.key === "Enter") {
       findPerson();
@@ -1441,6 +1482,7 @@ function bindControls() {
   document.getElementById("clearButton").addEventListener("click", function() {
     searchBar.value = "";
     searchResults.hidden = true;
+    if (peopleBrowseSelect) peopleBrowseSelect.value = "";
     resetAll();
     searchBar.focus();
   });

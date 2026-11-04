@@ -399,7 +399,7 @@ function renderRelatedLetterBrowser(data) {
 
   let selectionText = hasRange
     ? (rangeStart === rangeEnd ? String(rangeStart) : rangeStart + "–" + rangeEnd)
-    : (Number.isFinite(selectedYear) ? ((selectedMonth ? (selectedMonth === "unknown" ? "Unknown month " : ["","January","February","March","April","May","June","July","August","September","October","November","December"][Number(selectedMonth)] + " ") : "") + String(selectedYear)) : "");
+    : (Number.isFinite(selectedYear) ? ((selectedMonth ? (selectedMonth === "unknown" ? "UNK month " : ["","January","February","March","April","May","June","July","August","September","October","November","December"][Number(selectedMonth)] + " ") : "") + String(selectedYear)) : "");
 
   let yearNote = document.createElement("div");
   yearNote.className = "TimelineLettersYear";
@@ -417,7 +417,7 @@ function renderRelatedLetterBrowser(data) {
   }
 
   let activeType = "All";
-  let relationOrder = ["All", "To", "From", "About"];
+  let relationOrder = ["All", "To", "From"];
 
   let tabs = document.createElement("div");
   tabs.className = "LetterTabs";
@@ -513,8 +513,7 @@ function renderRelatedLetterBrowser(data) {
       correspondentSelect.appendChild(option);
     });
 
-    correspondentSelect.disabled =
-      activeType === "About" || correspondents.length === 0;
+    correspondentSelect.disabled = correspondents.length === 0;
   }
 
   function appendLetterRow(letter, parent) {
@@ -574,7 +573,7 @@ function renderRelatedLetterBrowser(data) {
     }
 
     if (activeType === "All") {
-      ["To", "From", "About"].forEach(function(type) {
+      ["To", "From"].forEach(function(type) {
         let group = filtered.filter(function(letter) {
           return letter.relationType === type;
         });

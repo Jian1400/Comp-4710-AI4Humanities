@@ -19,7 +19,7 @@ let selectedPerson = null;
 let relationshipFilter = "all";
 let genderFilter = "all";
 let hideInactive = false;
-let rowSort = "alpha";
+let rowSort = "range-desc";
 let rowHeight = 34;
 let chartMarginLeft = 190;
 let chartMarginRight = 22;
@@ -162,7 +162,8 @@ function parseUpdatedRelation(personName, relationHtml) {
     let tag = element.tagName ? element.tagName.toLowerCase() : "";
     if (tag === "strong") {
       let heading = element.textContent.trim().replace(/:$/, "");
-      if (["To", "From", "About"].indexOf(heading) !== -1) relationType = heading;
+      // Non-correspondence relation sections remain in the CSV but are not ingested by this visualization.
+      relationType = (heading === "To" || heading === "From") ? heading : "";
       return;
     }
     if (tag !== "a" || !relationType) return;
@@ -269,6 +270,7 @@ Promise.all([
   visibleEndYear = maxYear;
 
   initializeControls();
+  buildPeopleBrowseSelect();
   redraw();
 }).catch(function(error) {
   console.error(error);
@@ -353,10 +355,6 @@ function visiblePeople() {
     result.sort(function(a,b) {
       return personRangeCount(b) - personRangeCount(a) || a.FullName.localeCompare(b.FullName);
     });
-  } else if (rowSort === "range-asc") {
-    result.sort(function(a,b) {
-      return personRangeCount(a) - personRangeCount(b) || a.FullName.localeCompare(b.FullName);
-    });
   } else if (rowSort === "first") {
     result.sort(function(a,b) {
       let ay = firstCorrespondenceYear(a);
@@ -419,6 +417,9 @@ function initializeControls() {
   [start, end].forEach(function(slider) { slider.min = minYear; slider.max = maxYear; });
   start.value = minYear;
   end.value = maxYear;
+  let sortSelect = document.getElementById("sortRowsSelect");
+  if (sortSelect) sortSelect.value = rowSort;
+  syncRangeControls();
 
   start.addEventListener("input", function() {
     visibleStartYear = Math.min(Number(start.value), visibleEndYear);
@@ -437,9 +438,25 @@ function initializeControls() {
   document.getElementById("clearButton").addEventListener("click", function() {
     document.getElementById("searchBar").value = "";
     document.getElementById("searchResults").hidden = true;
+    let browse = document.getElementById("peopleBrowseSelect");
+    if (browse) browse.value = "";
     fitRangeToCurrentPopulation();
     redraw();
   });
+
+  let peopleBrowseSelect = document.getElementById("peopleBrowseSelect");
+  if (peopleBrowseSelect) {
+    peopleBrowseSelect.addEventListener("change", function() {
+      let selectedIndex = Number(peopleBrowseSelect.value);
+      if (!Number.isFinite(selectedIndex) || peopleBrowseSelect.value === "") return;
+      let person = people.find(function(item) { return item.index === selectedIndex; });
+      if (!person) return;
+      document.getElementById("searchBar").value = person.FullName;
+      document.getElementById("searchResults").hidden = true;
+      fitRangeToCurrentPopulation();
+      redraw();
+    });
+  }
 
   document.getElementById("zoomInButton").addEventListener("click", function() { zoomRange(0.68); });
   document.getElementById("zoomOutButton").addEventListener("click", function() { zoomRange(1.45); });
@@ -480,8 +497,44 @@ function buildSegments(containerId, values, onChange) {
 }
 
 function syncRangeControls() {
-  document.getElementById("rangeStartSlider").value = visibleStartYear;
-  document.getElementById("rangeEndSlider").value = visibleEndYear;
+  let start = document.getElementById("rangeStartSlider");
+  let end = document.getElementById("rangeEndSlider");
+  if (!start || !end) return;
+
+  start.value = visibleStartYear;
+  end.value = visibleEndYear;
+
+  let span = Math.max(1, maxYear - minYear);
+  let startPercent = ((visibleStartYear - minYear) / span) * 100;
+  let endPercent = ((visibleEndYear - minYear) / span) * 100;
+  let fill = document.getElementById("rangeTrackFill");
+  if (fill) {
+    fill.style.left = startPercent + "%";
+    fill.style.width = Math.max(0, endPercent - startPercent) + "%";
+  }
+
+  let startBubble = document.getElementById("rangeStartBubble");
+  let endBubble = document.getElementById("rangeEndBubble");
+  if (startBubble) {
+    startBubble.textContent = visibleStartYear;
+    startBubble.style.left = startPercent + "%";
+  }
+  if (endBubble) {
+    endBubble.textContent = visibleEndYear;
+    endBubble.style.left = endPercent + "%";
+  }
+
+  // Keep the year labels readable when the two handles get close together.
+  let handleGap = endPercent - startPercent;
+  if (startBubble && endBubble) {
+    if (handleGap < 10) {
+      startBubble.style.transform = "translateX(-105%)";
+      endBubble.style.transform = "translateX(5%)";
+    } else {
+      startBubble.style.transform = "translateX(-50%)";
+      endBubble.style.transform = "translateX(-50%)";
+    }
+  }
 }
 
 function zoomRange(factor) {
@@ -499,6 +552,27 @@ function zoomRange(factor) {
   visibleEndYear = Math.min(maxYear, end);
   syncRangeControls();
   redraw();
+}
+
+function buildPeopleBrowseSelect() {
+  let select = document.getElementById("peopleBrowseSelect");
+  if (!select) return;
+
+  select.innerHTML = "";
+  let placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select a person…";
+  select.appendChild(placeholder);
+
+  people
+    .slice()
+    .sort(function(a, b) { return a.FullName.localeCompare(b.FullName); })
+    .forEach(function(person) {
+      let option = document.createElement("option");
+      option.value = String(person.index);
+      option.textContent = person.FullName;
+      select.appendChild(option);
+    });
 }
 
 function renderSearchResults() {
@@ -523,6 +597,8 @@ function renderSearchResults() {
       button.querySelector(".SearchResultType").textContent = capitalizeWords(person.Relationship);
       button.addEventListener("click", function() {
         input.value = person.FullName;
+        let browse = document.getElementById("peopleBrowseSelect");
+        if (browse) browse.value = String(person.index);
         results.hidden = true;
         fitRangeToCurrentPopulation();
         redraw();
@@ -543,13 +619,12 @@ function redraw() {
   let years = yearsInWindow();
   let counts = annualUniqueCounts(rows);
 
-  document.getElementById("RangeStartReadout").textContent = visibleStartYear;
-  document.getElementById("RangeEndReadout").textContent = visibleEndYear;
+  syncRangeControls();
 
   let totalRangeLetters = Object.keys(counts).reduce(function(sum, year) { return sum + counts[year]; }, 0);
   let backYears = document.getElementById("backToYearsButton");
   if (drillYear !== null) {
-    document.getElementById("MatrixSummary").textContent = rows.length + " people visible · monthly detail for " + drillYear + " · unknown-month letters kept separately";
+    document.getElementById("MatrixSummary").textContent = rows.length + " people visible · monthly detail for " + drillYear + " · UNK letters kept separately";
     if (backYears) backYears.hidden = false;
     drawMonthBars(rows, drillYear);
     drawMonthMatrix(rows, drillYear);
@@ -700,7 +775,7 @@ function monthBuckets() {
     { key: 4, label: "Apr" }, { key: 5, label: "May" }, { key: 6, label: "Jun" },
     { key: 7, label: "Jul" }, { key: 8, label: "Aug" }, { key: 9, label: "Sep" },
     { key: 10, label: "Oct" }, { key: 11, label: "Nov" }, { key: 12, label: "Dec" },
-    { key: "unknown", label: "Unknown" }
+    { key: "unknown", label: "UNK" }
   ];
 }
 
@@ -724,6 +799,36 @@ function makeMonthXScale(width) {
   return d3.scalePoint().domain(monthBuckets().map(function(m) { return String(m.key); })).range([chartMarginLeft + 8, width - chartMarginRight - 8]).padding(0.35);
 }
 
+function monthLabelsForWidth(buckets, x, width) {
+  if (!buckets.length) return [];
+
+  // Keep labels readable as the chart narrows. All labels are short (Jan…Dec, UNK),
+  // but we still thin them when the actual pixel spacing becomes too tight.
+  let minimumGap = width <= 620 ? 27 : 23;
+  let labels = [];
+  let lastX = -Infinity;
+
+  buckets.forEach(function(bucket) {
+    let px = x(String(bucket.key));
+    if (!labels.length || px - lastX >= minimumGap) {
+      labels.push(bucket);
+      lastX = px;
+    }
+  });
+
+  // Always show UNK at the far right. If necessary, drop the previous label
+  // rather than allowing the two labels to collide.
+  let unknown = buckets[buckets.length - 1];
+  if (labels.indexOf(unknown) === -1) {
+    while (labels.length && x(String(unknown.key)) - x(String(labels[labels.length - 1].key)) < minimumGap) {
+      labels.pop();
+    }
+    labels.push(unknown);
+  }
+
+  return labels;
+}
+
 function drawMonthBars(rows, year) {
   let host = document.getElementById("barHeader");
   host.innerHTML = "";
@@ -737,7 +842,7 @@ function drawMonthBars(rows, year) {
   let step = (width - chartMarginLeft - chartMarginRight) / buckets.length;
   let barWidth = Math.max(8, Math.min(34, step * 0.55));
   svg.append("text").attr("class", "AxisTitle").attr("x", 10).attr("y", 18).text("" + year + " correspondence by month");
-  svg.append("text").attr("class", "AxisHint").attr("x", 10).attr("y", 34).text("Unknown = year is known, but no reliable month is stated");
+  svg.append("text").attr("class", "AxisHint").attr("x", 10).attr("y", 34).text("UNK = year is known, but no reliable month is stated");
   let g = svg.selectAll("g.MonthBarGroup").data(buckets).enter().append("g");
   g.append("rect").attr("class", function(m){ return "YearBar" + (String(selectedMonth) === String(m.key) ? " SelectedYear" : ""); })
     .attr("x", function(m){ return x(String(m.key)) - barWidth/2; }).attr("y", function(m){ return y(counts[m.key] || 0); })
@@ -746,7 +851,8 @@ function drawMonthBars(rows, year) {
     .attr("y", barTop).attr("width", Math.max(24, step)).attr("height", barBottom-barTop+25)
     .on("click", function(m){ selectedMonth = m.key; window.currentTimelineYear = year; window.currentTimelineMonth = m.key; redraw(); })
     .on("mousemove", function(m){ showTooltip(d3.event, null, m.label + " " + year, counts[m.key] || 0); }).on("mouseleave", hideTooltip);
-  svg.selectAll("text.YearLabel").data(buckets).enter().append("text").attr("class","YearLabel")
+  let labelBuckets = monthLabelsForWidth(buckets, x, width);
+  svg.selectAll("text.YearLabel").data(labelBuckets).enter().append("text").attr("class","YearLabel")
     .attr("x", function(m){ return x(String(m.key)); }).attr("y", headerHeight-18).attr("text-anchor","middle").text(function(m){ return m.label; });
 }
 

@@ -74,7 +74,7 @@ function showHoverName(node, data, displayRadius) {
 
   let stats = typeof getLetterStatsForNode === "function"
     ? getLetterStatsForNode(data)
-    : { total: 0, to: 0, from: 0, about: 0 };
+    : { total: 0, to: 0, from: 0 };
 
   let group = labelLayer
     .append("g")
@@ -101,7 +101,7 @@ function showHoverName(node, data, displayRadius) {
     .attr("text-anchor", "middle")
     .attr("dominant-baseline", "middle")
     .text(
-      stats.total + " letters · To " + stats.to + " · From " + stats.from + " · About " + stats.about
+      stats.total + " letters · To " + stats.to + " · From " + stats.from
     );
 
   let box = group.node().getBBox();
@@ -249,7 +249,7 @@ function renderRelatedLetterBrowser(data) {
   });
 
   let activeType = "All";
-  let relationOrder = ["All", "To", "From", "About"];
+  let relationOrder = ["All", "To", "From"];
 
   // -------------------
   // Tabs
@@ -374,9 +374,7 @@ function renderRelatedLetterBrowser(data) {
       correspondentSelect.appendChild(option);
     });
 
-    // About records typically do not have a clean sender/recipient.
-    correspondentSelect.disabled =
-      activeType === "About" || correspondents.length === 0;
+    correspondentSelect.disabled = correspondents.length === 0;
 
     if (
       current !== "all" &&
@@ -588,7 +586,7 @@ function renderRelatedLetterBrowser(data) {
     }
 
     if (activeType === "All") {
-      ["To", "From", "About"].forEach(function(type) {
+      ["To", "From"].forEach(function(type) {
         let group = filtered.filter(function(letter) {
           return letter.relationType === type;
         });

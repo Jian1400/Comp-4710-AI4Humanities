@@ -88,7 +88,7 @@ button { cursor: pointer; }
 .SecondaryButton { width: 100%; margin-top: 5px; }
 .ExplanationSection p { margin: 0; color: #65584b; font-size: 10px; line-height: 1.55; }
 
-.MatrixWorkspace { min-width: 0; height: 100vh; display: grid; grid-template-rows: auto minmax(0,1fr); padding: 14px 16px 16px; overflow: hidden; }
+.MatrixWorkspace { min-width: 0; height: 100vh; display: grid; grid-template-rows: auto minmax(0,1fr) auto; padding: 14px 16px 12px; overflow: hidden; }
 .MatrixHeaderText { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; padding: 0 2px 10px; }
 .MatrixHeaderText h1 { margin: 2px 0 0; color: var(--wine-dark); font: 700 clamp(22px,2.3vw,34px)/1 "Cormorant Garamond", Georgia, serif; }
 .MatrixSummary { max-width: 420px; color: #665849; font-size: 10px; line-height: 1.45; text-align: right; }
@@ -134,7 +134,7 @@ button { cursor: pointer; }
 .DetailsSubhead { margin: 13px 0 6px; padding-top: 10px; border-top: 1px solid rgba(154,116,61,.3); color: var(--wine); text-transform: uppercase; letter-spacing: .08em; font: 700 11px "Cormorant Garamond", serif; }
 #BiographySummary { color: #5f5145; font-size: 10px; line-height: 1.55; }
 .TimelineLettersYear { margin-bottom: 7px; color: var(--wine); font: 700 13px "Cormorant Garamond", serif; }
-.LetterTabs { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-bottom: 8px; }
+.LetterTabs { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin-bottom: 8px; }
 .LetterTab { border: 1px solid #b9a384; background: #f8f0e4; color: #5d4d40; border-radius: 3px; padding: 5px 3px; font-size: 8px; }
 .LetterTab.Active { background: var(--wine); border-color: var(--wine); color: white; }
 .LetterFilterControls { display: grid; gap: 6px; margin-bottom: 7px; }
@@ -305,4 +305,190 @@ body:not(.SidebarClosed) .FloatingSidebarButton { display: none; }
   body:not(.SidebarClosed) .FloatingSidebarButton { display: none; }
   body:not(.SidebarClosed) .SidebarBackdrop { display: block; }
   .RangeButtonsThree { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+
+/* Shared explore control used by the main network visualization. */
+.PeopleBrowseLabel {
+  display: block;
+  margin: 9px 0 4px;
+  color: #806f61;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.PeopleBrowseSelect {
+  width: 100%;
+  min-height: 34px;
+  padding: 7px 28px 7px 9px;
+  border: 1px solid rgba(117,91,64,.30);
+  border-radius: 3px;
+  background: rgba(255,252,245,.78);
+  color: #3e3127;
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-size: 9px;
+}
+.PeopleBrowseSelect:focus {
+  outline: 2px solid rgba(107,36,48,.20);
+  outline-offset: 1px;
+  border-color: rgba(107,36,48,.48);
+}
+
+@media (max-width: 760px) {
+  .PeopleBrowseSelect { min-height: 44px; font-size: 16px; }
+  .SearchClear, .RangeButtons button, .BackToNetworkButton { min-height: 44px; }
+}
+
+
+/* Compact full-width dual-handle year range control */
+.TimelineRangeDock {
+  min-width: 0;
+  padding: 4px 2px 0;
+}
+.RangeDockCompact {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  min-height: 38px;
+}
+.RangeMiniButtons {
+  display: grid;
+  grid-template-columns: 28px 28px 42px;
+  gap: 3px;
+}
+.RangeMiniButtons button {
+  min-width: 0;
+  min-height: 28px;
+  padding: 3px 5px;
+  border: 1px solid #b9a384;
+  border-radius: 4px;
+  background: #f7efe2;
+  color: #55483d;
+  font-size: 9px;
+  font-weight: 700;
+}
+.DualRange {
+  position: relative;
+  height: 38px;
+  min-width: 0;
+  margin: 0 7px 0 2px;
+}
+.DualRangeTrack,
+.DualRangeFill {
+  position: absolute;
+  top: 23px;
+  height: 5px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+.DualRangeTrack {
+  left: 0;
+  right: 0;
+  background: #d7c7ae;
+  border: 1px solid rgba(117,91,64,.24);
+}
+.DualRangeFill {
+  left: 0;
+  width: 100%;
+  background: var(--wine);
+}
+.RangeHandleLabel {
+  position: absolute;
+  top: 0;
+  z-index: 7;
+  min-width: 32px;
+  padding: 1px 4px 2px;
+  border: 1px solid rgba(107,36,48,.35);
+  border-radius: 3px;
+  background: #fff8ec;
+  color: var(--wine-dark);
+  box-shadow: 0 1px 2px rgba(54,39,27,.10);
+  font: 700 9px/1.2 "Libre Baskerville", serif;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+.RangeHandleLabel::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid rgba(107,36,48,.35);
+  border-bottom: 1px solid rgba(107,36,48,.35);
+  background: #fff8ec;
+  transform: translateX(-50%) rotate(45deg);
+}
+.DualRangeInput {
+  position: absolute;
+  inset: 12px 0 0;
+  width: 100%;
+  height: 26px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.DualRangeInput::-webkit-slider-runnable-track {
+  height: 5px;
+  background: transparent;
+  border: 0;
+}
+.DualRangeInput::-moz-range-track {
+  height: 5px;
+  background: transparent;
+  border: 0;
+}
+.DualRangeInput::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -5.5px;
+  border: 2px solid var(--wine);
+  border-radius: 50%;
+  background: #fff8ec;
+  box-shadow: 0 1px 3px rgba(54,39,27,.18);
+  cursor: ew-resize;
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.DualRangeInput::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--wine);
+  border-radius: 50%;
+  background: #fff8ec;
+  box-shadow: 0 1px 3px rgba(54,39,27,.18);
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+.DualRangeInput:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid rgba(107,36,48,.32);
+  outline-offset: 2px;
+}
+.DualRangeInput:focus-visible::-moz-range-thumb {
+  outline: 2px solid rgba(107,36,48,.32);
+  outline-offset: 2px;
+}
+.DualRangeStart { z-index: 3; }
+.DualRangeEnd { z-index: 4; }
+
+@media (max-width: 760px) {
+  .MatrixWorkspace { grid-template-rows: auto minmax(0,1fr) auto; padding-bottom: 5px; }
+  .TimelineRangeDock { padding-top: 3px; }
+  .RangeDockCompact { gap: 6px; min-height: 42px; }
+  .RangeMiniButtons { grid-template-columns: 36px 36px 44px; gap: 3px; }
+  .RangeMiniButtons button { min-height: 38px; font-size: 9px; }
+  .DualRange { height: 42px; margin-right: 9px; }
+  .DualRangeTrack, .DualRangeFill { top: 25px; height: 6px; }
+  .DualRangeInput { top: 12px; bottom: 0; height: 30px; }
+  .DualRangeInput::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -7px; }
+  .DualRangeInput::-moz-range-thumb { width: 18px; height: 18px; }
+  .RangeHandleLabel { font-size: 9px; min-width: 34px; }
 }

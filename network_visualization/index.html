@@ -37,6 +37,10 @@
                 <button id="clearButton" type="button" class="SearchClear" title="Clear search">×</button>
               </div>
               <div id="searchResults" class="SearchResults" hidden></div>
+              <label class="PeopleBrowseLabel" for="peopleBrowseSelect">Browse all people</label>
+              <select id="peopleBrowseSelect" class="PeopleBrowseSelect" aria-label="Browse all people">
+                <option value="">Select a person…</option>
+              </select>
             </section>
 
             <section class="SidebarSection CompactFilterSection">
@@ -46,28 +50,28 @@
               </div>
               <div id="combinedFilters" class="FilterSelectors"></div>
 
-              <label class="ResearchFilterLabel" for="letterMinimumFilter">Minimum related letters</label>
-              <select id="letterMinimumFilter" class="ResearchFilterSelect" aria-label="Minimum related letter count"></select>
+              <label class="ResearchFilterLabel" for="letterMinimumFilter">Minimum To/From letters</label>
+              <select id="letterMinimumFilter" class="ResearchFilterSelect" aria-label="Minimum To and From letter count"></select>
             </section>
 
             <section class="SidebarSection NetworkGuideSection">
               <div class="SectionLabel">About this view</div>
-              <p class="NetworkGuideText">People are positioned around George Eliot using the Archive’s predefined closeness values. Filters let you compare those curated relationships with gender and related-letter volume. Select a portrait to view its biography and linked letters.</p>
+              <p class="NetworkGuideText">People are positioned around George Eliot using the Archive’s predefined closeness values. Filters let you compare those curated relationships with gender and To/From correspondence volume. Select a portrait to view its biography and linked correspondence.</p>
             </section>
           </div>
 
           <div id="ComparisonControls" hidden>
             <section class="SidebarSection ComparisonIntroSection">
               <div class="SectionLabel">Compare people</div>
-              <p class="NetworkGuideText">Tap two person bubbles in the network to compare the Archive’s closeness value with the amount and direction of their linked correspondence.</p>
+              <p class="NetworkGuideText">Tap two person bubbles in the network to compare the Archive’s closeness value with their To/From correspondence activity.</p>
 
               <div class="ComparisonSlots" aria-live="polite">
-                <div class="ComparisonSlotRow">
-                  <span class="ComparisonSlotTag">A</span>
+                <div class="ComparisonSlotRow ComparisonSlotRowA">
+                  <span class="ComparisonSlotTag ComparisonSlotTagA">A</span>
                   <span id="ComparisonASlot" class="ComparisonSlotValue">Tap a bubble for Person A</span>
                 </div>
-                <div class="ComparisonSlotRow">
-                  <span class="ComparisonSlotTag">B</span>
+                <div class="ComparisonSlotRow ComparisonSlotRowB">
+                  <span class="ComparisonSlotTag ComparisonSlotTagB">B</span>
                   <span id="ComparisonBSlot" class="ComparisonSlotValue">Tap a second bubble for Person B</span>
                 </div>
               </div>
